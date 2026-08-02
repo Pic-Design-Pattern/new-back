@@ -9,21 +9,21 @@ import {
 import { UsuarioService } from './usuario.service';
 import { CadastrarUsuarioDto } from './dtos/cadastrar-usuario.dto';
 import { LoginUsuarioDto } from './dtos/login-usuario.dto';
-import { Publico } from '../common/seguranca/decorators/publico.decorator';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
 import { ControllerResponse, ResponseFactory } from '../utils/response';
 
-
-@Controller('autenticacao')
+@Controller('/autenticacao')
 export class UsuarioController {
   constructor(
     private readonly usuarioService: UsuarioService,
     private readonly responseFactory: ResponseFactory,
   ) {}
 
-  @Post('cadastro')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
-  async cadastrar(@Body() dto: CadastrarUsuarioDto) {
+  public async cadastrar(
+    @Body() dto: CadastrarUsuarioDto,
+  ): Promise<ControllerResponse> {
     await this.usuarioService.cadastrar(dto);
 
     return this.responseFactory.createCreatedResponse(
@@ -32,9 +32,11 @@ export class UsuarioController {
     );
   }
 
-  @Post('login')
+  @Post('/login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginUsuarioDto) {
+  public async login(
+    @Body() dto: LoginUsuarioDto,
+  ): Promise<ControllerResponse> {
     const resultado = await this.usuarioService.login(dto);
 
     return this.responseFactory.createSuccessResponse(
@@ -43,8 +45,10 @@ export class UsuarioController {
     );
   }
 
-  @Get('perfil')
-  async perfil(@UsuarioLogado('email') email: string) {
+  @Get('/perfil')
+  public async buscarInformacoesUsuarioLogado(
+    @UsuarioLogado('email') email: string,
+  ): Promise<ControllerResponse> {
     const usuario = await this.usuarioService.obterPerfil(email);
 
     return this.responseFactory.createSuccessResponse(

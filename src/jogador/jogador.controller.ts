@@ -11,20 +11,19 @@ import { CadastrarJogadorDto } from './dtos/cadastrar-jogador.dto';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
 import { ControllerResponse, ResponseFactory } from '../utils/response';
 
-@Controller('jogador')
+@Controller('/jogador')
 export class JogadorController {
   constructor(
     private readonly jogadorService: JogadorService,
     private readonly responseFactory: ResponseFactory,
-  ) { }
+  ) {}
 
-
-  @Post('cadastrar')
+  @Post()
   @HttpCode(HttpStatus.CREATED)
   public async cadastrar(
     @Body() dto: CadastrarJogadorDto,
     @UsuarioLogado('email') emailUsuario: string,
-  ) {
+  ): Promise<ControllerResponse> {
     const jogador = await this.jogadorService.cadastrar(dto, emailUsuario);
 
     return this.responseFactory.createCreatedResponse(
@@ -33,9 +32,8 @@ export class JogadorController {
     );
   }
 
-
-  @Get('meu-perfil')
-  public async meuPerfil(@UsuarioLogado('email') emailUsuario: string) {
+  @Get('/perfil')
+  public async buscarPerfilDoUsuario(@UsuarioLogado('email') emailUsuario: string): Promise<ControllerResponse> {
     const jogador =
       await this.jogadorService.buscarPerfilDoUsuario(emailUsuario);
 
