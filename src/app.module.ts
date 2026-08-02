@@ -8,6 +8,7 @@ import { AutenticadoGuard } from './common/seguranca/autenticado/guards/autentic
 import { UsuarioModule } from './usuario/usuario.module';
 import { JogadorModule } from './jogador/jogador.module';
 import { AbelhaModule } from './abelha/abelha.module';
+import { ResponseModule } from './utils/response.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { AbelhaModule } from './abelha/abelha.module';
     UsuarioModule,
     JogadorModule,
     AbelhaModule,
+    ResponseModule,
   ],
   controllers: [],
   providers: [

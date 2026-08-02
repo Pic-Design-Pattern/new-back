@@ -9,10 +9,14 @@ import {
 import { JogadorService } from './jogador.service';
 import { CadastrarJogadorDto } from './dtos/cadastrar-jogador.dto';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
+import { ControllerResponse, ResponseFactory } from '../utils/response';
 
 @Controller('jogador')
 export class JogadorController {
-  constructor(private readonly jogadorService: JogadorService) { }
+  constructor(
+    private readonly jogadorService: JogadorService,
+    private readonly responseFactory: ResponseFactory,
+  ) { }
 
 
   @Post('cadastrar')
@@ -23,12 +27,10 @@ export class JogadorController {
   ) {
     const jogador = await this.jogadorService.cadastrar(dto, emailUsuario);
 
-    return {
-      sucesso: true,
-      mensagem: 'Jogador cadastrado com sucesso',
-      status: HttpStatus.CREATED,
-      dados: jogador,
-    };
+    return this.responseFactory.createCreatedResponse(
+      jogador,
+      'Jogador cadastrado com sucesso',
+    );
   }
 
 
@@ -37,11 +39,9 @@ export class JogadorController {
     const jogador =
       await this.jogadorService.buscarPerfilDoUsuario(emailUsuario);
 
-    return {
-      sucesso: true,
-      mensagem: 'Perfil do jogador obtido com sucesso',
-      status: HttpStatus.OK,
-      dados: jogador,
-    };
+    return this.responseFactory.createSuccessResponse(
+      jogador,
+      'Perfil do jogador obtido com sucesso',
+    );
   }
 }

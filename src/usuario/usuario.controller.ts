@@ -11,49 +11,45 @@ import { CadastrarUsuarioDto } from './dtos/cadastrar-usuario.dto';
 import { LoginUsuarioDto } from './dtos/login-usuario.dto';
 import { Publico } from '../common/seguranca/decorators/publico.decorator';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
+import { ControllerResponse, ResponseFactory } from '../utils/response';
 
 
 @Controller('autenticacao')
 export class UsuarioController {
-  constructor(private readonly usuarioService: UsuarioService) {}
+  constructor(
+    private readonly usuarioService: UsuarioService,
+    private readonly responseFactory: ResponseFactory,
+  ) {}
 
-  @Publico()
   @Post('cadastro')
   @HttpCode(HttpStatus.CREATED)
   async cadastrar(@Body() dto: CadastrarUsuarioDto) {
     await this.usuarioService.cadastrar(dto);
 
-    return {
-      sucesso: true,
-      mensagem: 'Usuário cadastrado com sucesso',
-      status: HttpStatus.CREATED,
-      dados: null,
-    };
+    return this.responseFactory.createCreatedResponse(
+      undefined,
+      'Usuário cadastrado com sucesso',
+    );
   }
 
-  @Publico()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginUsuarioDto) {
     const resultado = await this.usuarioService.login(dto);
 
-    return {
-      sucesso: true,
-      mensagem: 'Login realizado com sucesso',
-      status: HttpStatus.OK,
-      dados: resultado,
-    };
+    return this.responseFactory.createSuccessResponse(
+      resultado,
+      'Login realizado com sucesso',
+    );
   }
 
   @Get('perfil')
   async perfil(@UsuarioLogado('email') email: string) {
     const usuario = await this.usuarioService.obterPerfil(email);
 
-    return {
-      sucesso: true,
-      mensagem: 'Perfil obtido com sucesso',
-      status: HttpStatus.OK,
-      dados: usuario,
-    };
+    return this.responseFactory.createSuccessResponse(
+      usuario,
+      'Perfil obtido com sucesso',
+    );
   }
 }
