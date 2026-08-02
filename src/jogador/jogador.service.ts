@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -8,10 +9,11 @@ import { JogadorRepositoryToken } from './repositorios/jogador.repository';
 import type { JogadorRepository } from './repositorios/jogador.repository';
 import { AbelhaService } from '../abelha/abelha.service';
 import { CadastrarJogadorDto } from './dtos/cadastrar-jogador.dto';
+import { CadastrarAbelhaInlineDto } from './dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from './entidades/jogador.entity';
 import { UsuarioRepositoryToken } from 'src/usuario/repositorios/usuario.repository';
 import type { UsuarioRepository } from 'src/usuario/repositorios/usuario.repository';
-
+import { AbelhaEntity } from 'src/abelha/entidades/abelha.entity';
 
 @Injectable()
 export class JogadorService {
@@ -25,8 +27,7 @@ export class JogadorService {
     private readonly abelhaService: AbelhaService,
   ) {}
 
-
-  async cadastrar(
+  public async cadastrar(
     dto: CadastrarJogadorDto,
     emailUsuario: string,
   ): Promise<JogadorEntity> {
@@ -37,10 +38,10 @@ export class JogadorService {
     }
 
     if (usuario.jogador) {
-      throw new ConflictException('Este usuário já possui um jogador cadastrado');
+      throw new ConflictException(
+        'Este usuário já possui um jogador cadastrado',
+      );
     }
-
-    const abelha = await this.abelhaService.criarAbelha(dto.abelha);
 
     const novoJogador = new JogadorEntity();
     novoJogador.nome = dto.nome;
@@ -49,7 +50,12 @@ export class JogadorService {
     novoJogador.dinheiro = 0.0;
     novoJogador.ticketContinental = 1;
     novoJogador.ticketRegional = 1;
-    novoJogador.abelha = abelha;
+
+    const abelha = await this.abelhaService.criarAbelha(
+      dto.abelha,
+      novoJogador,
+    );
+    novoJogador.abelhas = [abelha];
 
     const jogadorSalvo = await this.jogadorRepositorio.salvar(novoJogador);
     await this.usuarioRepositorio.vincularJogador(usuario.id, jogadorSalvo.id);
@@ -57,7 +63,9 @@ export class JogadorService {
     return jogadorSalvo;
   }
 
-  async buscarPerfilDoUsuario(emailUsuario: string): Promise<JogadorEntity> {
+  public async buscarPerfilDoUsuario(
+    emailUsuario: string,
+  ): Promise<JogadorEntity> {
     const usuario = await this.usuarioRepositorio.buscarPorEmail(emailUsuario);
 
     if (!usuario) {
@@ -71,5 +79,44 @@ export class JogadorService {
     }
 
     return usuario.jogador;
+  }
+
+  public async cadastrarNovaAbelha(
+    emailUsuario: string,
+    dto: CadastrarAbelhaInlineDto,
+  ): Promise<AbelhaEntity> {
+    const jogador = await this.buscarPerfilDoUsuario(emailUsuario);
+
+    if (jogador.abelhas && jogador.abelhas.length >= 3) {
+      throw new BadRequestException(
+        'O usuário já possui o limite máximo de 3 abelhas.',
+      );
+    }
+
+    const novaAbelha = await this.abelhaService.criarAbelha(dto, jogador);
+    return novaAbelha;
+  }
+
+  public async removerAbelha(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<void> {
+    const jogador = await this.buscarPerfilDoUsuario(emailUsuario);
+
+    if (jogador.abelhas && jogador.abelhas.length <= 1) {
+      throw new BadRequestException(
+        'O jogador deve ter pelo menos uma abelha.',
+      );
+    }
+
+    const abelhaPertenceAoJogador = jogador.abelhas?.some(
+      (abelha) => abelha.id === idAbelha,
+    );
+
+    if (!abelhaPertenceAoJogador) {
+      throw new NotFoundException('Abelha não encontrada no perfil do jogador');
+    }
+
+    await this.abelhaService.removerAbelha(idAbelha);
   }
 }

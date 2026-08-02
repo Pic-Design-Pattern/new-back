@@ -5,9 +5,12 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { JogadorService } from './jogador.service';
 import { CadastrarJogadorDto } from './dtos/cadastrar-jogador.dto';
+import { CadastrarAbelhaInlineDto } from './dtos/cadastrar-abelha-inline.dto';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
 import { ControllerResponse, ResponseFactory } from '../utils/response';
 
@@ -40,6 +43,37 @@ export class JogadorController {
     return this.responseFactory.createSuccessResponse(
       jogador,
       'Perfil do jogador obtido com sucesso',
+    );
+  }
+
+  @Post('/abelhas')
+  @HttpCode(HttpStatus.CREATED)
+  public async cadastrarNovaAbelha(
+    @Body() dto: CadastrarAbelhaInlineDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const novaAbelha = await this.jogadorService.cadastrarNovaAbelha(
+      emailUsuario,
+      dto,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      novaAbelha,
+      'Abelha cadastrada com sucesso',
+    );
+  }
+
+  @Delete('/abelhas/:idAbelha')
+  @HttpCode(HttpStatus.OK)
+  public async removerAbelha(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    await this.jogadorService.removerAbelha(emailUsuario, idAbelha);
+
+    return this.responseFactory.createSuccessResponse(
+      undefined,
+      'Abelha removida com sucesso',
     );
   }
 }

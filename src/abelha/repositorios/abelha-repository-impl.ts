@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { AbelhaEntity } from '../entidades/abelha.entity';
 import { AbelhaRepository } from './abelha.repository';
@@ -30,10 +34,22 @@ export class AbelhaRepositoryImplementation implements AbelhaRepository {
     });
   }
 
- public async existePorId(id: string): Promise<boolean> {
+  public async existePorId(id: string): Promise<boolean> {
     return this._abelhaRepository.existsBy({ id }).catch((error) => {
       this.logger.error(error);
-      throw new InternalServerErrorException('Erro ao verificar existência da abelha!');
+      throw new InternalServerErrorException(
+        'Erro ao verificar existência da abelha!',
+      );
     });
+  }
+
+  public async deletar(id: string): Promise<void> {
+    return this._abelhaRepository
+      .delete(id)
+      .then(() => {})
+      .catch((error) => {
+        this.logger.error(error);
+        throw new InternalServerErrorException('Erro ao deletar abelha!');
+      });
   }
 }

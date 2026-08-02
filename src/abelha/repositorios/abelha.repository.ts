@@ -6,4 +6,5 @@ export interface AbelhaRepository {
   salvar(abelha: AbelhaEntity): Promise<AbelhaEntity>;
   buscarPorId(id: string): Promise<AbelhaEntity | null>;
   existePorId(id: string): Promise<boolean>;
+  deletar(id: string): Promise<void>;
 }

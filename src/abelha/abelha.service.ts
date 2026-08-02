@@ -4,6 +4,7 @@ import type { AbelhaRepository } from './repositorios/abelha.repository';
 import { AbelhaEntity } from './entidades/abelha.entity';
 import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
+import { JogadorEntity } from '../jogador/entidades/jogador.entity';
 
 
 @Injectable()
@@ -14,7 +15,10 @@ export class AbelhaService {
   ) { }
 
 
-  async criarAbelha(dados: CadastrarAbelhaInlineDto): Promise<AbelhaEntity> {
+  public async criarAbelha(
+    dados: CadastrarAbelhaInlineDto,
+    jogador?: JogadorEntity,
+  ): Promise<AbelhaEntity> {
     let roupa: Partial<RoupaAbelhaEntity> | null = null;
 
     if (dados.roupa) {
@@ -33,11 +37,16 @@ export class AbelhaService {
     if (dados.tamanho) novaAbelha.tamanho = dados.tamanho;
     novaAbelha.ehNpc = false;
     if (roupa) novaAbelha.roupa = roupa as RoupaAbelhaEntity;
+    if (jogador) novaAbelha.jogador = jogador;
 
     return this.abelhaRepositorio.salvar(novaAbelha);
   }
 
   async buscarPorId(id: string): Promise<AbelhaEntity | null> {
     return this.abelhaRepositorio.buscarPorId(id);
+  }
+
+  async removerAbelha(id: string): Promise<void> {
+    return this.abelhaRepositorio.deletar(id);
   }
 }

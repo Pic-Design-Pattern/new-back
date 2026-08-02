@@ -3,9 +3,11 @@ import {
   Entity,
   JoinColumn,
   OneToOne,
+  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RoupaAbelhaEntity } from './roupa-abelha.entity';
+import { JogadorEntity } from '../../jogador/entidades/jogador.entity';
 
 @Entity('abelhas')
 export class AbelhaEntity {
@@ -31,4 +33,10 @@ export class AbelhaEntity {
   })
   @JoinColumn({ name: 'roupa_abelha_id' })
   roupa?: RoupaAbelhaEntity;
+
+  @ManyToOne(() => JogadorEntity, (jogador) => jogador.abelhas, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'jogador_id' })
+  jogador: JogadorEntity;
 }

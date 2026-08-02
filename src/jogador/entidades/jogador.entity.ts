@@ -2,7 +2,7 @@ import {
   Column,
   Entity,
   JoinColumn,
-  OneToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { AbelhaEntity } from '../../abelha/entidades/abelha.entity';
@@ -11,7 +11,7 @@ import { AbelhaEntity } from '../../abelha/entidades/abelha.entity';
  * Entidade que representa um jogador no jogo.
  * Equivalente da PlayerEntity.java.
  *
- * Relacionamento OneToOne com AbelhaEntity (cada jogador tem uma abelha).
+ * Relacionamento OneToMany com AbelhaEntity (cada jogador tem até 3 abelhas).
  * O inventário foi removido nesta migração parcial.
  */
 @Entity('jogadores')
@@ -37,11 +37,9 @@ export class JogadorEntity {
   @Column({ name: 'ticket_regional', type: 'bigint', default: 1 })
   ticketRegional: number;
 
-  @OneToOne(() => AbelhaEntity, {
+  @OneToMany(() => AbelhaEntity, (abelha) => abelha.jogador, {
     eager: true,
-    nullable: true,
     cascade: true,
   })
-  @JoinColumn({ name: 'abelha_id' })
-  abelha: AbelhaEntity | null;
+  abelhas: AbelhaEntity[];
 }
