@@ -24,10 +24,10 @@ export class JogadorController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   public async cadastrar(
-    @Body() dto: CadastrarJogadorDto,
+    @Body() body: CadastrarJogadorDto,
     @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
-    const jogador = await this.jogadorService.cadastrar(dto, emailUsuario);
+    const jogador = await this.jogadorService.cadastrar(body, emailUsuario);
 
     return this.responseFactory.createCreatedResponse(
       jogador,
@@ -49,12 +49,12 @@ export class JogadorController {
   @Post('/abelhas')
   @HttpCode(HttpStatus.CREATED)
   public async cadastrarNovaAbelha(
-    @Body() dto: CadastrarAbelhaInlineDto,
+    @Body() body: CadastrarAbelhaInlineDto,
     @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const novaAbelha = await this.jogadorService.cadastrarNovaAbelha(
       emailUsuario,
-      dto,
+      body,
     );
 
     return this.responseFactory.createCreatedResponse(

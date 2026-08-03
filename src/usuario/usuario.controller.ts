@@ -22,9 +22,9 @@ export class UsuarioController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   public async cadastrar(
-    @Body() dto: CadastrarUsuarioDto,
+    @Body() body: CadastrarUsuarioDto,
   ): Promise<ControllerResponse> {
-    await this.usuarioService.cadastrar(dto);
+    await this.usuarioService.cadastrar(body);
 
     return this.responseFactory.createCreatedResponse(
       undefined,
@@ -35,9 +35,9 @@ export class UsuarioController {
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   public async login(
-    @Body() dto: LoginUsuarioDto,
+    @Body() body: LoginUsuarioDto,
   ): Promise<ControllerResponse> {
-    const resultado = await this.usuarioService.login(dto);
+    const resultado = await this.usuarioService.login(body);
 
     return this.responseFactory.createSuccessResponse(
       resultado,
