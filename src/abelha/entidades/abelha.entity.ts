@@ -2,11 +2,13 @@ import {
   Column,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RoupaAbelhaEntity } from './roupa-abelha.entity';
+import { RoupaDesbloqueadaEntity } from './roupa-desbloqueada.entity';
 import { JogadorEntity } from '../../jogador/entidades/jogador.entity';
 
 @Entity('abelhas')
@@ -45,6 +47,12 @@ export class AbelhaEntity {
   })
   @JoinColumn({ name: 'roupa_abelha_id' })
   roupa?: RoupaAbelhaEntity;
+
+  @OneToMany(() => RoupaDesbloqueadaEntity, (roupa) => roupa.abelha, {
+    eager: true,
+    cascade: true,
+  })
+  roupasDesbloqueadas: RoupaDesbloqueadaEntity[];
 
   @ManyToOne(() => JogadorEntity, (jogador) => jogador.abelhas, {
     onDelete: 'CASCADE',

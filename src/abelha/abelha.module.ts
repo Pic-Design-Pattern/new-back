@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AbelhaEntity } from './entidades/abelha.entity';
 import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
+import { RoupaDesbloqueadaEntity } from './entidades/roupa-desbloqueada.entity';
 import { AbelhaService } from './abelha.service';
 import { AbelhaController } from './abelha.controller';
 import { AbelhaRepositoryProvider } from './providers/abelha-repository.provider';
@@ -10,7 +11,7 @@ import { ResponseModule } from '../utils/response.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AbelhaEntity, RoupaAbelhaEntity]),
+    TypeOrmModule.forFeature([AbelhaEntity, RoupaAbelhaEntity, RoupaDesbloqueadaEntity]),
     ResponseModule,
   ],
   controllers: [AbelhaController],
