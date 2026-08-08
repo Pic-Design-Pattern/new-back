@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus } from '@nestjs/common';
+import { ForbiddenException, HttpStatus } from '@nestjs/common';
 import { AbelhaController } from '../../../src/abelha/abelha.controller';
 import { AbelhaService } from '../../../src/abelha/abelha.service';
 import { ResponseFactory } from '../../../src/utils/response';
@@ -7,7 +7,7 @@ import { AbelhaEntity } from '../../../src/abelha/entidades/abelha.entity';
 import { RoupaAbelhaEntity } from '../../../src/abelha/entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from '../../../src/abelha/entidades/roupa-desbloqueada.entity';
 
-// ── Dados Mock ──
+const mockEmailUsuario = 'jogador@email.com';
 
 const mockRoupaAbelha: RoupaAbelhaEntity = {
   id: 'roupa-uuid-1',
@@ -89,25 +89,41 @@ describe('AbelhaController', () => {
   // ── buscarInformacoes ──
 
   describe('buscarInformacoes', () => {
-    it('deve retornar as informações da abelha com sucesso', async () => {
+    it('deve retornar as informações da abelha do usuário com sucesso', async () => {
       service.buscarInformacoesAbelha.mockResolvedValue(mockInfoAbelha);
 
-      const resultado = await controller.buscarInformacoes('abelha-uuid-1');
+      const resultado = await controller.buscarInformacoes(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
-      expect(service.buscarInformacoesAbelha).toHaveBeenCalledWith('abelha-uuid-1');
+      expect(service.buscarInformacoesAbelha).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Informações da abelha obtidas com sucesso');
       expect(resultado.dados).toEqual(mockInfoAbelha);
     });
 
-    it('deve propagar exceção quando o service lançar erro', async () => {
+    it('deve propagar ForbiddenException quando a abelha pertencer a outro usuário (BOLA protection)', async () => {
+      service.buscarInformacoesAbelha.mockRejectedValue(
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
+      );
+
+      await expect(
+        controller.buscarInformacoes('abelha-alheia', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('deve propagar exceção quando a abelha não existir', async () => {
       service.buscarInformacoesAbelha.mockRejectedValue(
         new Error('Abelha não encontrada'),
       );
 
       await expect(
-        controller.buscarInformacoes('id-inexistente'),
+        controller.buscarInformacoes('id-inexistente', mockEmailUsuario),
       ).rejects.toThrow('Abelha não encontrada');
     });
   });
@@ -119,25 +135,31 @@ describe('AbelhaController', () => {
       const abelhaAtualizada = { ...mockAbelha, dinheiro: 200.5 };
       service.adicionarDinheiro.mockResolvedValue(abelhaAtualizada);
 
-      const resultado = await controller.adicionarDinheiro('abelha-uuid-1', {
-        valor: 50.0,
-      });
+      const resultado = await controller.adicionarDinheiro(
+        'abelha-uuid-1',
+        { valor: 50.0 },
+        mockEmailUsuario,
+      );
 
-      expect(service.adicionarDinheiro).toHaveBeenCalledWith('abelha-uuid-1', 50.0);
+      expect(service.adicionarDinheiro).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+        50.0,
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Dinheiro adicionado com sucesso');
       expect(resultado.dados).toEqual(abelhaAtualizada);
     });
 
-    it('deve propagar exceção quando o service lançar erro', async () => {
+    it('deve propagar ForbiddenException ao tentar adicionar dinheiro na abelha de outro jogador', async () => {
       service.adicionarDinheiro.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.adicionarDinheiro('id-inexistente', { valor: 10 }),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.adicionarDinheiro('abelha-alheia', { valor: 50.0 }, mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -148,23 +170,29 @@ describe('AbelhaController', () => {
       const abelhaAtualizada = { ...mockAbelha, ticketContinental: 4 };
       service.adicionarPassaporteContinental.mockResolvedValue(abelhaAtualizada);
 
-      const resultado = await controller.adicionarPassaporteContinental('abelha-uuid-1');
+      const resultado = await controller.adicionarPassaporteContinental(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
-      expect(service.adicionarPassaporteContinental).toHaveBeenCalledWith('abelha-uuid-1');
+      expect(service.adicionarPassaporteContinental).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Passaporte continental adicionado com sucesso');
       expect(resultado.dados.ticketContinental).toBe(4);
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException quando a abelha não pertence ao usuário', async () => {
       service.adicionarPassaporteContinental.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.adicionarPassaporteContinental('id-inexistente'),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.adicionarPassaporteContinental('abelha-alheia', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -175,23 +203,29 @@ describe('AbelhaController', () => {
       const abelhaAtualizada = { ...mockAbelha, ticketRegional: 3 };
       service.adicionarPassaporteRegional.mockResolvedValue(abelhaAtualizada);
 
-      const resultado = await controller.adicionarPassaporteRegional('abelha-uuid-1');
+      const resultado = await controller.adicionarPassaporteRegional(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
-      expect(service.adicionarPassaporteRegional).toHaveBeenCalledWith('abelha-uuid-1');
+      expect(service.adicionarPassaporteRegional).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Passaporte regional adicionado com sucesso');
       expect(resultado.dados.ticketRegional).toBe(3);
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException quando abelha não pertence ao usuário', async () => {
       service.adicionarPassaporteRegional.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.adicionarPassaporteRegional('id-inexistente'),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.adicionarPassaporteRegional('abelha-alheia', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -202,25 +236,31 @@ describe('AbelhaController', () => {
       const abelhaAtualizada = { ...mockAbelha, mapaAtual: 'deserto' };
       service.alterarMapaAtual.mockResolvedValue(abelhaAtualizada);
 
-      const resultado = await controller.alterarMapaAtual('abelha-uuid-1', {
-        mapa: 'deserto',
-      });
+      const resultado = await controller.alterarMapaAtual(
+        'abelha-uuid-1',
+        { mapa: 'deserto' },
+        mockEmailUsuario,
+      );
 
-      expect(service.alterarMapaAtual).toHaveBeenCalledWith('abelha-uuid-1', 'deserto');
+      expect(service.alterarMapaAtual).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+        'deserto',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Mapa da abelha alterado com sucesso');
       expect(resultado.dados.mapaAtual).toBe('deserto');
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException quando abelha não pertence ao jogador', async () => {
       service.alterarMapaAtual.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.alterarMapaAtual('id-inexistente', { mapa: 'deserto' }),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.alterarMapaAtual('abelha-alheia', { mapa: 'deserto' }, mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -231,9 +271,15 @@ describe('AbelhaController', () => {
       const roupas = [mockRoupaDesbloqueada];
       service.listarRoupasDesbloqueadas.mockResolvedValue(roupas);
 
-      const resultado = await controller.listarRoupasDesbloqueadas('abelha-uuid-1');
+      const resultado = await controller.listarRoupasDesbloqueadas(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
-      expect(service.listarRoupasDesbloqueadas).toHaveBeenCalledWith('abelha-uuid-1');
+      expect(service.listarRoupasDesbloqueadas).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Roupas desbloqueadas listadas com sucesso');
@@ -243,20 +289,23 @@ describe('AbelhaController', () => {
     it('deve retornar lista vazia quando não há roupas desbloqueadas', async () => {
       service.listarRoupasDesbloqueadas.mockResolvedValue([]);
 
-      const resultado = await controller.listarRoupasDesbloqueadas('abelha-uuid-1');
+      const resultado = await controller.listarRoupasDesbloqueadas(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
       expect(resultado.sucesso).toBe(true);
       expect(resultado.dados).toEqual([]);
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException ao tentar listar roupas de abelha alheia', async () => {
       service.listarRoupasDesbloqueadas.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.listarRoupasDesbloqueadas('id-inexistente'),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.listarRoupasDesbloqueadas('abelha-alheia', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -266,13 +315,18 @@ describe('AbelhaController', () => {
     it('deve adicionar roupa desbloqueada e retornar com status CREATED', async () => {
       service.adicionarRoupaDesbloqueada.mockResolvedValue(mockRoupaDesbloqueada);
 
-      const resultado = await controller.adicionarRoupaDesbloqueada('abelha-uuid-1', {
-        idRoupa: 'roupa-uuid-1',
-        valorCompra: 50.0,
-        valorVenda: 25.0,
-      });
+      const resultado = await controller.adicionarRoupaDesbloqueada(
+        'abelha-uuid-1',
+        {
+          idRoupa: 'roupa-uuid-1',
+          valorCompra: 50.0,
+          valorVenda: 25.0,
+        },
+        mockEmailUsuario,
+      );
 
       expect(service.adicionarRoupaDesbloqueada).toHaveBeenCalledWith(
+        mockEmailUsuario,
         'abelha-uuid-1',
         'roupa-uuid-1',
         50.0,
@@ -284,32 +338,18 @@ describe('AbelhaController', () => {
       expect(resultado.dados).toEqual(mockRoupaDesbloqueada);
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException ao tentar adicionar roupa em abelha alheia', async () => {
       service.adicionarRoupaDesbloqueada.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.adicionarRoupaDesbloqueada('id-inexistente', {
-          idRoupa: 'roupa-uuid-1',
-          valorCompra: 50.0,
-          valorVenda: 25.0,
-        }),
-      ).rejects.toThrow('Abelha não encontrada');
-    });
-
-    it('deve propagar exceção quando roupa não existe', async () => {
-      service.adicionarRoupaDesbloqueada.mockRejectedValue(
-        new Error('Roupa não encontrada'),
-      );
-
-      await expect(
-        controller.adicionarRoupaDesbloqueada('abelha-uuid-1', {
-          idRoupa: 'roupa-inexistente',
-          valorCompra: 50.0,
-          valorVenda: 25.0,
-        }),
-      ).rejects.toThrow('Roupa não encontrada');
+        controller.adicionarRoupaDesbloqueada(
+          'abelha-alheia',
+          { idRoupa: 'roupa-uuid-1', valorCompra: 50.0, valorVenda: 25.0 },
+          mockEmailUsuario,
+        ),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -323,9 +363,11 @@ describe('AbelhaController', () => {
       const resultado = await controller.venderRoupa(
         'abelha-uuid-1',
         'roupa-desb-uuid-1',
+        mockEmailUsuario,
       );
 
       expect(service.venderRoupa).toHaveBeenCalledWith(
+        mockEmailUsuario,
         'abelha-uuid-1',
         'roupa-desb-uuid-1',
       );
@@ -335,16 +377,14 @@ describe('AbelhaController', () => {
       expect(resultado.dados.dinheiro).toBe(175.5);
     });
 
-    it('deve propagar exceção quando roupa desbloqueada não pertence à abelha', async () => {
+    it('deve propagar ForbiddenException ao tentar vender roupa de abelha alheia', async () => {
       service.venderRoupa.mockRejectedValue(
-        new Error('Roupa desbloqueada não encontrada no inventário desta abelha'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.venderRoupa('abelha-uuid-1', 'roupa-desb-inexistente'),
-      ).rejects.toThrow(
-        'Roupa desbloqueada não encontrada no inventário desta abelha',
-      );
+        controller.venderRoupa('abelha-alheia', 'roupa-desb-1', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -354,9 +394,15 @@ describe('AbelhaController', () => {
     it('deve retornar a roupa vestida pela abelha', async () => {
       service.listarRoupaVestida.mockResolvedValue(mockRoupaAbelha);
 
-      const resultado = await controller.listarRoupaVestida('abelha-uuid-1');
+      const resultado = await controller.listarRoupaVestida(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
-      expect(service.listarRoupaVestida).toHaveBeenCalledWith('abelha-uuid-1');
+      expect(service.listarRoupaVestida).toHaveBeenCalledWith(
+        mockEmailUsuario,
+        'abelha-uuid-1',
+      );
       expect(resultado.sucesso).toBe(true);
       expect(resultado.status).toBe(HttpStatus.OK);
       expect(resultado.mensagem).toBe('Roupa vestida obtida com sucesso');
@@ -366,20 +412,24 @@ describe('AbelhaController', () => {
     it('deve retornar null quando a abelha não tem roupa vestida', async () => {
       service.listarRoupaVestida.mockResolvedValue(null);
 
-      const resultado = await controller.listarRoupaVestida('abelha-uuid-1');
+      const resultado = await controller.listarRoupaVestida(
+        'abelha-uuid-1',
+        mockEmailUsuario,
+      );
 
       expect(resultado.sucesso).toBe(true);
       expect(resultado.dados).toBeNull();
     });
 
-    it('deve propagar exceção quando abelha não existe', async () => {
+    it('deve propagar ForbiddenException ao tentar listar roupa vestida de abelha alheia', async () => {
       service.listarRoupaVestida.mockRejectedValue(
-        new Error('Abelha não encontrada'),
+        new ForbiddenException('Você não tem permissão para gerenciar esta abelha'),
       );
 
       await expect(
-        controller.listarRoupaVestida('id-inexistente'),
-      ).rejects.toThrow('Abelha não encontrada');
+        controller.listarRoupaVestida('abelha-alheia', mockEmailUsuario),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });
+

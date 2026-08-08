@@ -10,6 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { AbelhaService } from './abelha.service';
+import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
 import { ResponseFactory, ControllerResponse } from '../utils/response';
 import { AdicionarDinheiroDto } from './dtos/adicionar-dinheiro.dto';
 import { AlterarMapaDto } from './dtos/alterar-mapa.dto';
@@ -25,8 +26,12 @@ export class AbelhaController {
   @Get('/:idAbelha/info')
   public async buscarInformacoes(
     @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
-    const info = await this._abelhaService.buscarInformacoesAbelha(idAbelha);
+    const info = await this._abelhaService.buscarInformacoesAbelha(
+      emailUsuario,
+      idAbelha,
+    );
 
     return this.responseFactory.createSuccessResponse(
       info,
@@ -39,8 +44,10 @@ export class AbelhaController {
   public async adicionarDinheiro(
     @Param('idAbelha') idAbelha: string,
     @Body() body: AdicionarDinheiroDto,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const abelha = await this._abelhaService.adicionarDinheiro(
+      emailUsuario,
       idAbelha,
       body.valor,
     );
@@ -55,9 +62,13 @@ export class AbelhaController {
   @HttpCode(HttpStatus.OK)
   public async adicionarPassaporteContinental(
     @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const abelha =
-      await this._abelhaService.adicionarPassaporteContinental(idAbelha);
+      await this._abelhaService.adicionarPassaporteContinental(
+        emailUsuario,
+        idAbelha,
+      );
 
     return this.responseFactory.createSuccessResponse(
       abelha,
@@ -69,9 +80,13 @@ export class AbelhaController {
   @HttpCode(HttpStatus.OK)
   public async adicionarPassaporteRegional(
     @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const abelha =
-      await this._abelhaService.adicionarPassaporteRegional(idAbelha);
+      await this._abelhaService.adicionarPassaporteRegional(
+        emailUsuario,
+        idAbelha,
+      );
 
     return this.responseFactory.createSuccessResponse(
       abelha,
@@ -84,8 +99,10 @@ export class AbelhaController {
   public async alterarMapaAtual(
     @Param('idAbelha') idAbelha: string,
     @Body() body: AlterarMapaDto,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const abelha = await this._abelhaService.alterarMapaAtual(
+      emailUsuario,
       idAbelha,
       body.mapa,
     );
@@ -99,9 +116,12 @@ export class AbelhaController {
   @Get('/:idAbelha/roupas-desbloqueadas')
   public async listarRoupasDesbloqueadas(
     @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
-    const roupas =
-      await this._abelhaService.listarRoupasDesbloqueadas(idAbelha);
+    const roupas = await this._abelhaService.listarRoupasDesbloqueadas(
+      emailUsuario,
+      idAbelha,
+    );
 
     return this.responseFactory.createSuccessResponse(
       roupas,
@@ -114,8 +134,10 @@ export class AbelhaController {
   public async adicionarRoupaDesbloqueada(
     @Param('idAbelha') idAbelha: string,
     @Body() body: AdicionarRoupaDesbloqueadaDto,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const roupa = await this._abelhaService.adicionarRoupaDesbloqueada(
+      emailUsuario,
       idAbelha,
       body.idRoupa,
       body.valorCompra,
@@ -133,8 +155,10 @@ export class AbelhaController {
   public async venderRoupa(
     @Param('idAbelha') idAbelha: string,
     @Param('idRoupaDesbloqueada') idRoupaDesbloqueada: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
     const abelha = await this._abelhaService.venderRoupa(
+      emailUsuario,
       idAbelha,
       idRoupaDesbloqueada,
     );
@@ -148,8 +172,12 @@ export class AbelhaController {
   @Get('/:idAbelha/roupa-vestida')
   public async listarRoupaVestida(
     @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
   ): Promise<ControllerResponse> {
-    const roupa = await this._abelhaService.listarRoupaVestida(idAbelha);
+    const roupa = await this._abelhaService.listarRoupaVestida(
+      emailUsuario,
+      idAbelha,
+    );
 
     return this.responseFactory.createSuccessResponse(
       roupa,
@@ -157,4 +185,3 @@ export class AbelhaController {
     );
   }
 }
-

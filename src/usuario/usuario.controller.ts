@@ -6,10 +6,12 @@ import {
   HttpStatus,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsuarioService } from './usuario.service';
 import { CadastrarUsuarioDto } from './dtos/cadastrar-usuario.dto';
 import { LoginUsuarioDto } from './dtos/login-usuario.dto';
 import { UsuarioLogado } from '../common/seguranca/decorators/usuario-logado.decorator';
+import { Publico } from '../common/seguranca/decorators/publico.decorator';
 import { ControllerResponse, ResponseFactory } from '../utils/response';
 
 @Controller('/autenticacao')
@@ -19,6 +21,8 @@ export class UsuarioController {
     private readonly responseFactory: ResponseFactory,
   ) {}
 
+  @Publico()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   public async cadastrar(
@@ -32,6 +36,8 @@ export class UsuarioController {
     );
   }
 
+  @Publico()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('/login')
   @HttpCode(HttpStatus.OK)
   public async login(

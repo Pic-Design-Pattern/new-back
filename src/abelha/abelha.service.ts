@@ -1,6 +1,11 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AbelhaRepositoryToken } from './repositorios/abelha.repository';
 import type { AbelhaRepository } from './repositorios/abelha.repository';
 import { AbelhaEntity } from './entidades/abelha.entity';
@@ -8,6 +13,7 @@ import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './entidades/roupa-desbloqueada.entity';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from '../jogador/entidades/jogador.entity';
+import { UsuarioEntity } from '../usuario/entidades/usuario.entity';
 
 @Injectable()
 export class AbelhaService {
@@ -20,6 +26,8 @@ export class AbelhaService {
 
     @InjectRepository(RoupaAbelhaEntity)
     private readonly roupaAbelhaRepo: Repository<RoupaAbelhaEntity>,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   public async criarAbelha(
@@ -53,20 +61,47 @@ export class AbelhaService {
     return this.abelhaRepositorio.salvar(novaAbelha);
   }
 
-  async buscarPorId(id: string): Promise<AbelhaEntity | null> {
-    return this.abelhaRepositorio.buscarPorId(id);
-  }
-
   async removerAbelha(id: string): Promise<void> {
     return this.abelhaRepositorio.deletar(id);
   }
 
-  public async buscarInformacoesAbelha(idAbelha: string) {
+  public async validarPosseAbelha(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
     const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
 
     if (!abelha) {
       throw new NotFoundException('Abelha não encontrada');
     }
+
+    const usuario = await this.dataSource.getRepository(UsuarioEntity).findOne({
+      where: { email: emailUsuario },
+      relations: { jogador: { abelhas: true } },
+    });
+
+    if (!usuario || !usuario.jogador) {
+      throw new ForbiddenException('Usuário não possui jogador cadastrado');
+    }
+
+    const pertenceAoJogador = usuario.jogador.abelhas?.some(
+      (a) => a.id === idAbelha,
+    );
+
+    if (!pertenceAoJogador) {
+      throw new ForbiddenException(
+        'Você não tem permissão para gerenciar esta abelha',
+      );
+    }
+
+    return abelha;
+  }
+
+  public async buscarInformacoesAbelha(
+    emailUsuario: string,
+    idAbelha: string,
+  ) {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     return {
       mapaAtual: abelha.mapaAtual,
@@ -77,65 +112,65 @@ export class AbelhaService {
   }
 
   public async adicionarDinheiro(
+    emailUsuario: string,
     idAbelha: string,
     valor: number,
   ): Promise<AbelhaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
 
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+    return this.dataSource.transaction(async (manager) => {
+      const abelha = await manager.findOne(AbelhaEntity, {
+        where: { id: idAbelha },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    abelha.dinheiro = Number(abelha.dinheiro) + valor;
-    return this.abelhaRepositorio.salvar(abelha);
+      if (!abelha) {
+        throw new NotFoundException('Abelha não encontrada');
+      }
+
+      abelha.dinheiro = Number(abelha.dinheiro) + valor;
+      return manager.save(AbelhaEntity, abelha);
+    });
   }
 
   public async adicionarPassaporteContinental(
+    emailUsuario: string,
     idAbelha: string,
   ): Promise<AbelhaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
-
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     abelha.ticketContinental = Number(abelha.ticketContinental) + 1;
     return this.abelhaRepositorio.salvar(abelha);
   }
 
   public async adicionarPassaporteRegional(
+    emailUsuario: string,
     idAbelha: string,
   ): Promise<AbelhaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
-
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     abelha.ticketRegional = Number(abelha.ticketRegional) + 1;
     return this.abelhaRepositorio.salvar(abelha);
   }
 
   public async alterarMapaAtual(
+    emailUsuario: string,
     idAbelha: string,
     novoMapa: string,
   ): Promise<AbelhaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
-
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     abelha.mapaAtual = novoMapa;
     return this.abelhaRepositorio.salvar(abelha);
   }
 
-  public async listarRoupasDesbloqueadas(idAbelha: string) {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+  // ── Roupas Desbloqueadas ──
 
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+  public async listarRoupasDesbloqueadas(
+    emailUsuario: string,
+    idAbelha: string,
+  ) {
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     return this.roupaDesbloqueadaRepo.find({
       where: { abelha: { id: idAbelha } },
@@ -144,18 +179,17 @@ export class AbelhaService {
   }
 
   public async adicionarRoupaDesbloqueada(
+    emailUsuario: string,
     idAbelha: string,
     idRoupa: string,
     valorCompra: number,
     valorVenda: number,
   ): Promise<RoupaDesbloqueadaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
-
-    const roupa = await this.roupaAbelhaRepo.findOne({ where: { id: idRoupa } });
+    const roupa = await this.roupaAbelhaRepo.findOne({
+      where: { id: idRoupa },
+    });
 
     if (!roupa) {
       throw new NotFoundException('Roupa não encontrada');
@@ -171,38 +205,42 @@ export class AbelhaService {
   }
 
   public async venderRoupa(
+    emailUsuario: string,
     idAbelha: string,
     idRoupaDesbloqueada: string,
   ): Promise<AbelhaEntity> {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
 
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
+    return this.dataSource.transaction(async (manager) => {
+      const abelha = await manager.findOne(AbelhaEntity, {
+        where: { id: idAbelha },
+        lock: { mode: 'pessimistic_write' },
+      });
 
-    const roupaDesbloqueada = await this.roupaDesbloqueadaRepo.findOne({
-      where: { id: idRoupaDesbloqueada, abelha: { id: idAbelha } },
+      if (!abelha) {
+        throw new NotFoundException('Abelha não encontrada');
+      }
+
+      const roupaDesbloqueada = await manager.findOne(RoupaDesbloqueadaEntity, {
+        where: { id: idRoupaDesbloqueada, abelha: { id: idAbelha } },
+      });
+
+      if (!roupaDesbloqueada) {
+        throw new NotFoundException(
+          'Roupa desbloqueada não encontrada no inventário desta abelha',
+        );
+      }
+
+      abelha.dinheiro =
+        Number(abelha.dinheiro) + Number(roupaDesbloqueada.valorVenda);
+
+      await manager.delete(RoupaDesbloqueadaEntity, idRoupaDesbloqueada);
+      return manager.save(AbelhaEntity, abelha);
     });
-
-    if (!roupaDesbloqueada) {
-      throw new NotFoundException('Roupa desbloqueada não encontrada no inventário desta abelha');
-    }
-
-    abelha.dinheiro = Number(abelha.dinheiro) + Number(roupaDesbloqueada.valorVenda);
-
-    await this.roupaDesbloqueadaRepo.delete(idRoupaDesbloqueada);
-
-    return this.abelhaRepositorio.salvar(abelha);
   }
 
-  public async listarRoupaVestida(idAbelha: string) {
-    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
-
-    if (!abelha) {
-      throw new NotFoundException('Abelha não encontrada');
-    }
-
+  public async listarRoupaVestida(emailUsuario: string, idAbelha: string) {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
     return abelha.roupa ?? null;
   }
 }
-
