@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { AbelhaRepositoryToken } from './repositorios/abelha.repository';
 import type { AbelhaRepository } from './repositorios/abelha.repository';
 import { AbelhaEntity } from './entidades/abelha.entity';
@@ -6,14 +6,12 @@ import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from '../jogador/entidades/jogador.entity';
 
-
 @Injectable()
 export class AbelhaService {
   constructor(
     @Inject(AbelhaRepositoryToken)
     private readonly abelhaRepositorio: AbelhaRepository,
-  ) { }
-
+  ) {}
 
   public async criarAbelha(
     dados: CadastrarAbelhaInlineDto,
@@ -36,6 +34,10 @@ export class AbelhaService {
     novaAbelha.nome = dados.nome;
     if (dados.tamanho) novaAbelha.tamanho = dados.tamanho;
     novaAbelha.ehNpc = false;
+    novaAbelha.mapaAtual = 'inicial';
+    novaAbelha.dinheiro = 0.0;
+    novaAbelha.ticketContinental = 1;
+    novaAbelha.ticketRegional = 1;
     if (roupa) novaAbelha.roupa = roupa as RoupaAbelhaEntity;
     if (jogador) novaAbelha.jogador = jogador;
 
@@ -48,5 +50,74 @@ export class AbelhaService {
 
   async removerAbelha(id: string): Promise<void> {
     return this.abelhaRepositorio.deletar(id);
+  }
+
+  public async buscarInformacoesAbelha(idAbelha: string) {
+    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+
+    if (!abelha) {
+      throw new NotFoundException('Abelha não encontrada');
+    }
+
+    return {
+      mapaAtual: abelha.mapaAtual,
+      dinheiro: abelha.dinheiro,
+      ticketContinental: abelha.ticketContinental,
+      ticketRegional: abelha.ticketRegional,
+    };
+  }
+
+  public async adicionarDinheiro(
+    idAbelha: string,
+    valor: number,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+
+    if (!abelha) {
+      throw new NotFoundException('Abelha não encontrada');
+    }
+
+    abelha.dinheiro = Number(abelha.dinheiro) + valor;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async adicionarPassaporteContinental(
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+
+    if (!abelha) {
+      throw new NotFoundException('Abelha não encontrada');
+    }
+
+    abelha.ticketContinental = Number(abelha.ticketContinental) + 1;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async adicionarPassaporteRegional(
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+
+    if (!abelha) {
+      throw new NotFoundException('Abelha não encontrada');
+    }
+
+    abelha.ticketRegional = Number(abelha.ticketRegional) + 1;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async alterarMapaAtual(
+    idAbelha: string,
+    novoMapa: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.abelhaRepositorio.buscarPorId(idAbelha);
+
+    if (!abelha) {
+      throw new NotFoundException('Abelha não encontrada');
+    }
+
+    abelha.mapaAtual = novoMapa;
+    return this.abelhaRepositorio.salvar(abelha);
   }
 }

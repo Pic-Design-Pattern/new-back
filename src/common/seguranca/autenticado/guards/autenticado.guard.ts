@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { IS_PUBLICO_KEY } from '../../decorators/publico.decorator';
 
 @Injectable()
 export class AutenticadoGuard implements CanActivate {
@@ -25,15 +24,6 @@ export class AutenticadoGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublico = this.reflector.getAllAndOverride<boolean>(
-      IS_PUBLICO_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (isPublico) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest();
     const token = this.extrairTokenDoHeader(request);
 

@@ -47,9 +47,6 @@ export class JogadorService {
     novoJogador.nome = dto.nome;
     novoJogador.comidaFavorita = dto.comidaFavorita;
     novoJogador.nivel = 1;
-    novoJogador.dinheiro = 0.0;
-    novoJogador.ticketContinental = 1;
-    novoJogador.ticketRegional = 1;
 
     const abelha = await this.abelhaService.criarAbelha(
       dto.abelha,

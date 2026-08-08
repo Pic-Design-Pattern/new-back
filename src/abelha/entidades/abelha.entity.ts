@@ -26,6 +26,18 @@ export class AbelhaEntity {
   @Column({ name: 'eh_npc', type: 'boolean', default: false })
   ehNpc: boolean;
 
+  @Column({ name: 'mapa_atual', type: 'varchar', default: 'inicial' })
+  mapaAtual: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0.0 })
+  dinheiro: number;
+
+  @Column({ name: 'ticket_continental', type: 'bigint', default: 1 })
+  ticketContinental: number;
+
+  @Column({ name: 'ticket_regional', type: 'bigint', default: 1 })
+  ticketRegional: number;
+
   @OneToOne(() => RoupaAbelhaEntity, {
     eager: true,
     nullable: true,

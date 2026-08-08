@@ -17,7 +17,7 @@ export class UsuarioRepositoryImplementation implements UsuarioRepository {
       where: { email },
       relations: {
         jogador: {
-          abelha: {
+          abelhas: {
             roupa: true,
           }
         }
