@@ -30,10 +30,13 @@ export class AbelhaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  public async criarAbelha(
-    dados: CadastrarAbelhaInlineDto,
-    jogador?: JogadorEntity,
-  ): Promise<AbelhaEntity> {
+  /**
+   * Monta a entidade em memória, sem salvar. Usado quando quem chama ainda vai
+   * persistir a abelha junto de outra entidade (ex.: cascade ao salvar o Jogador
+   * na primeira criação — salvar a abelha isoladamente antes falha porque o
+   * jogador ainda não tem id pra servir de FK).
+   */
+  public construirAbelha(dados: CadastrarAbelhaInlineDto): AbelhaEntity {
     let roupa: Partial<RoupaAbelhaEntity> | null = null;
 
     if (dados.roupa) {
@@ -56,7 +59,16 @@ export class AbelhaService {
     novaAbelha.ticketContinental = 1;
     novaAbelha.ticketRegional = 1;
     if (roupa) novaAbelha.roupa = roupa as RoupaAbelhaEntity;
-    if (jogador) novaAbelha.jogador = jogador;
+
+    return novaAbelha;
+  }
+
+  public async criarAbelha(
+    dados: CadastrarAbelhaInlineDto,
+    jogador: JogadorEntity,
+  ): Promise<AbelhaEntity> {
+    const novaAbelha = this.construirAbelha(dados);
+    novaAbelha.jogador = jogador;
 
     return this.abelhaRepositorio.salvar(novaAbelha);
   }

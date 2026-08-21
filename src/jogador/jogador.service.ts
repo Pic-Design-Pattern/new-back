@@ -48,10 +48,10 @@ export class JogadorService {
     novoJogador.comidaFavorita = dto.comidaFavorita;
     novoJogador.nivel = 1;
 
-    const abelha = await this.abelhaService.criarAbelha(
-      dto.abelha,
-      novoJogador,
-    );
+    // A abelha só é construída aqui (não salva) — o jogador ainda não tem id pra
+    // servir de FK. O cascade em JogadorEntity.abelhas salva os dois juntos, na
+    // ordem certa, quando o jogador for salvo logo abaixo.
+    const abelha = this.abelhaService.construirAbelha(dto.abelha);
     novoJogador.abelhas = [abelha];
 
     const jogadorSalvo = await this.jogadorRepositorio.salvar(novoJogador);
