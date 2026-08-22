@@ -373,6 +373,15 @@ export class AbelhaService {
     return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS, idPontoOnibus, idMapa);
   }
 
+  /** Aparências (itens de customização) obtidas — por compra na loja ou como recompensa de fase. */
+  public listarAparenciasDesbloqueadas(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.APARENCIA);
+  }
+
+  public desbloquearAparencia(emailUsuario: string, idAbelha: string, idAparencia: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.APARENCIA, idAparencia, idMapa);
+  }
+
   /** Todo progresso (área, fases, aeroportos, ônibus) desbloqueado num mapa específico, numa única busca — usado ao abrir um mapa. */
   public async buscarProgressoDoMapa(
     emailUsuario: string,

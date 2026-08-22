@@ -19,6 +19,7 @@ import { DesbloquearAreaDto } from './dtos/desbloquear-area.dto';
 import { MarcarFaseConcluidaDto } from './dtos/marcar-fase-concluida.dto';
 import { DesbloquearAeroportoDto } from './dtos/desbloquear-aeroporto.dto';
 import { DesbloquearPassagemOnibusDto } from './dtos/desbloquear-passagem-onibus.dto';
+import { DesbloquearAparenciaDto } from './dtos/desbloquear-aparencia.dto';
 
 @Controller('/abelha')
 export class AbelhaController {
@@ -366,6 +367,42 @@ export class AbelhaController {
     return this.responseFactory.createCreatedResponse(
       passagem,
       'Passagem de ônibus desbloqueada com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/aparencias-desbloqueadas')
+  public async listarAparenciasDesbloqueadas(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const aparencias = await this._abelhaService.listarAparenciasDesbloqueadas(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      aparencias,
+      'Aparências desbloqueadas listadas com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/aparencias-desbloqueadas')
+  @HttpCode(HttpStatus.CREATED)
+  public async desbloquearAparencia(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: DesbloquearAparenciaDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const aparencia = await this._abelhaService.desbloquearAparencia(
+      emailUsuario,
+      idAbelha,
+      body.idAparencia,
+      body.idMapa,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      aparencia,
+      'Aparência desbloqueada com sucesso',
     );
   }
 

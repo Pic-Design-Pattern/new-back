@@ -3,4 +3,5 @@ export enum TipoProgressoDesbloqueado {
   FASE = 'FASE',
   AEROPORTO = 'AEROPORTO',
   ONIBUS = 'ONIBUS',
+  APARENCIA = 'APARENCIA',
 }
