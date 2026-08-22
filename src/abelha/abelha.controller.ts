@@ -287,6 +287,7 @@ export class AbelhaController {
       emailUsuario,
       idAbelha,
       body.idFase,
+      body.idMapa,
     );
 
     return this.responseFactory.createCreatedResponse(
@@ -322,6 +323,7 @@ export class AbelhaController {
       emailUsuario,
       idAbelha,
       body.idAeroporto,
+      body.idMapa,
     );
 
     return this.responseFactory.createCreatedResponse(
@@ -358,11 +360,30 @@ export class AbelhaController {
       emailUsuario,
       idAbelha,
       body.idPontoOnibus,
+      body.idMapa,
     );
 
     return this.responseFactory.createCreatedResponse(
       passagem,
       'Passagem de ônibus desbloqueada com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/progresso-mapa/:idMapa')
+  public async buscarProgressoDoMapa(
+    @Param('idAbelha') idAbelha: string,
+    @Param('idMapa') idMapa: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const progresso = await this._abelhaService.buscarProgressoDoMapa(
+      emailUsuario,
+      idAbelha,
+      idMapa,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      progresso,
+      'Progresso do mapa obtido com sucesso',
     );
   }
 }

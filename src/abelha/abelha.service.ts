@@ -322,6 +322,7 @@ export class AbelhaService {
     idAbelha: string,
     tipo: TipoProgressoDesbloqueado,
     identificador: string,
+    idMapa: string,
   ): Promise<ProgressoDesbloqueadoEntity> {
     const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
@@ -334,6 +335,7 @@ export class AbelhaService {
     novoProgresso.abelha = abelha;
     novoProgresso.tipo = tipo;
     novoProgresso.identificador = identificador;
+    novoProgresso.idMapa = idMapa;
 
     return this.progressoDesbloqueadoRepo.save(novoProgresso);
   }
@@ -343,30 +345,44 @@ export class AbelhaService {
   }
 
   public desbloquearArea(emailUsuario: string, idAbelha: string, idMapa: string) {
-    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AREA, idMapa);
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AREA, idMapa, idMapa);
   }
 
   public listarFasesConcluidas(emailUsuario: string, idAbelha: string) {
     return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.FASE);
   }
 
-  public marcarFaseConcluida(emailUsuario: string, idAbelha: string, idFase: string) {
-    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.FASE, idFase);
+  public marcarFaseConcluida(emailUsuario: string, idAbelha: string, idFase: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.FASE, idFase, idMapa);
   }
 
   public listarAeroportosDesbloqueados(emailUsuario: string, idAbelha: string) {
     return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AEROPORTO);
   }
 
-  public desbloquearAeroporto(emailUsuario: string, idAbelha: string, idAeroporto: string) {
-    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AEROPORTO, idAeroporto);
+  public desbloquearAeroporto(emailUsuario: string, idAbelha: string, idAeroporto: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AEROPORTO, idAeroporto, idMapa);
   }
 
   public listarPassagensOnibusDesbloqueadas(emailUsuario: string, idAbelha: string) {
     return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS);
   }
 
-  public desbloquearPassagemOnibus(emailUsuario: string, idAbelha: string, idPontoOnibus: string) {
-    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS, idPontoOnibus);
+  public desbloquearPassagemOnibus(emailUsuario: string, idAbelha: string, idPontoOnibus: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS, idPontoOnibus, idMapa);
+  }
+
+  /** Todo progresso (área, fases, aeroportos, ônibus) desbloqueado num mapa específico, numa única busca — usado ao abrir um mapa. */
+  public async buscarProgressoDoMapa(
+    emailUsuario: string,
+    idAbelha: string,
+    idMapa: string,
+  ): Promise<ProgressoDesbloqueadoEntity[]> {
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    return this.progressoDesbloqueadoRepo.find({
+      where: { abelha: { id: idAbelha }, idMapa },
+      order: { desbloqueadoEm: 'ASC' },
+    });
   }
 }

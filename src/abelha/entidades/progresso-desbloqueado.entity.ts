@@ -33,6 +33,10 @@ export class ProgressoDesbloqueadoEntity {
   @Column({ type: 'varchar' })
   identificador: string;
 
+  /** Id do Mapa a que este registro pertence — pra AREA é igual a `identificador`; pras outras três, o mapa onde aquela AcaoDoMapa vive. Permite buscar tudo que já foi desbloqueado num mapa numa única query. */
+  @Column({ name: 'id_mapa', type: 'varchar' })
+  idMapa: string;
+
   @CreateDateColumn({ name: 'desbloqueado_em' })
   desbloqueadoEm: Date;
 }
