@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -55,7 +56,7 @@ export class AbelhaService {
     if (dados.tamanho) novaAbelha.tamanho = dados.tamanho;
     novaAbelha.ehNpc = false;
     novaAbelha.mapaAtual = 'inicial';
-    novaAbelha.dinheiro = 0.0;
+    novaAbelha.dinheiro = 500.0;
     novaAbelha.ticketContinental = 1;
     novaAbelha.ticketRegional = 1;
     if (roupa) novaAbelha.roupa = roupa as RoupaAbelhaEntity;
@@ -123,6 +124,7 @@ export class AbelhaService {
     };
   }
 
+  /** `valor` positivo credita, negativo debita — rejeita se o saldo ficaria negativo. */
   public async adicionarDinheiro(
     emailUsuario: string,
     idAbelha: string,
@@ -131,16 +133,26 @@ export class AbelhaService {
     await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     return this.dataSource.transaction(async (manager) => {
-      const abelha = await manager.findOne(AbelhaEntity, {
-        where: { id: idAbelha },
-        lock: { mode: 'pessimistic_write' },
-      });
+      // findOne com lock pessimista quebra aqui: AbelhaEntity tem relações eager
+      // (roupa, roupasDesbloqueadas) que viram LEFT JOIN, e o Postgres não aceita
+      // "FOR UPDATE" no lado nullable de um outer join. O queryBuilder abaixo trava
+      // só a linha da abelha, sem puxar essas relações.
+      const abelha = await manager
+        .createQueryBuilder(AbelhaEntity, 'abelha')
+        .setLock('pessimistic_write')
+        .where('abelha.id = :id', { id: idAbelha })
+        .getOne();
 
       if (!abelha) {
         throw new NotFoundException('Abelha não encontrada');
       }
 
-      abelha.dinheiro = Number(abelha.dinheiro) + valor;
+      const novoSaldo = Number(abelha.dinheiro) + valor;
+      if (novoSaldo < 0) {
+        throw new BadRequestException('Saldo insuficiente');
+      }
+
+      abelha.dinheiro = novoSaldo;
       return manager.save(AbelhaEntity, abelha);
     });
   }
@@ -162,6 +174,34 @@ export class AbelhaService {
     const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
 
     abelha.ticketRegional = Number(abelha.ticketRegional) + 1;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async gastarPassaporteContinental(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    if (Number(abelha.ticketContinental) <= 0) {
+      throw new BadRequestException('Nenhuma passagem continental disponível');
+    }
+
+    abelha.ticketContinental = Number(abelha.ticketContinental) - 1;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async gastarPassaporteRegional(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    if (Number(abelha.ticketRegional) <= 0) {
+      throw new BadRequestException('Nenhuma passagem regional disponível');
+    }
+
+    abelha.ticketRegional = Number(abelha.ticketRegional) - 1;
     return this.abelhaRepositorio.salvar(abelha);
   }
 

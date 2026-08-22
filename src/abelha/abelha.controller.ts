@@ -94,6 +94,40 @@ export class AbelhaController {
     );
   }
 
+  @Delete('/:idAbelha/passaporte-continental')
+  @HttpCode(HttpStatus.OK)
+  public async gastarPassaporteContinental(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const abelha = await this._abelhaService.gastarPassaporteContinental(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      abelha,
+      'Passaporte continental gasto com sucesso',
+    );
+  }
+
+  @Delete('/:idAbelha/passaporte-regional')
+  @HttpCode(HttpStatus.OK)
+  public async gastarPassaporteRegional(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const abelha = await this._abelhaService.gastarPassaporteRegional(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      abelha,
+      'Passaporte regional gasto com sucesso',
+    );
+  }
+
   @Patch('/:idAbelha/mapa')
   @HttpCode(HttpStatus.OK)
   public async alterarMapaAtual(
