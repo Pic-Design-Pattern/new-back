@@ -18,9 +18,6 @@ export class JogadorEntity {
   @Column({ type: 'bigint', default: 1 })
   nivel: number;
 
-  @Column({ name: 'comida_favorita', type: 'varchar' })
-  comidaFavorita: string;
-
   @OneToMany(() => AbelhaEntity, (abelha) => abelha.jogador, {
     eager: true,
     cascade: true,

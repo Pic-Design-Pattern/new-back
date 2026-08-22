@@ -45,7 +45,6 @@ export class JogadorService {
 
     const novoJogador = new JogadorEntity();
     novoJogador.nome = dto.nome;
-    novoJogador.comidaFavorita = dto.comidaFavorita;
     novoJogador.nivel = 1;
 
     // A abelha só é construída aqui (não salva) — o jogador ainda não tem id pra
@@ -99,12 +98,6 @@ export class JogadorService {
     idAbelha: string,
   ): Promise<void> {
     const jogador = await this.buscarPerfilDoUsuario(emailUsuario);
-
-    if (jogador.abelhas && jogador.abelhas.length <= 1) {
-      throw new BadRequestException(
-        'O jogador deve ter pelo menos uma abelha.',
-      );
-    }
 
     const abelhaPertenceAoJogador = jogador.abelhas?.some(
       (abelha) => abelha.id === idAbelha,

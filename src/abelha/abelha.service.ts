@@ -59,6 +59,7 @@ export class AbelhaService {
     const novaAbelha = new AbelhaEntity();
     novaAbelha.nome = dados.nome;
     if (dados.tamanho) novaAbelha.tamanho = dados.tamanho;
+    novaAbelha.comidaFavorita = dados.comidaFavorita;
     novaAbelha.ehNpc = false;
     novaAbelha.mapaAtual = 'inicial';
     novaAbelha.dinheiro = 500.0;

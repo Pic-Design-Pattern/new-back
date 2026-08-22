@@ -13,6 +13,11 @@ export class CadastrarAbelhaInlineDto {
   @IsOptional()
   tamanho?: string;
 
+  @IsString({ message: 'A comida favorita deve ser um texto' })
+  @IsNotEmpty({ message: 'A comida favorita é obrigatória' })
+  @MaxLength(50, { message: 'A comida favorita deve ter no máximo 50 caracteres' })
+  comidaFavorita: string;
+
   @ValidateNested({ message: 'Os dados da roupa são inválidos' })
   @IsOptional()
   @Type(() => CadastrarRoupaAbelhaDto)

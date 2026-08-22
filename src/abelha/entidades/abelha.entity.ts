@@ -25,6 +25,9 @@ export class AbelhaEntity {
   @Column({ type: 'varchar', nullable: true })
   tamanho?: string;
 
+  @Column({ name: 'comida_favorita', type: 'varchar' })
+  comidaFavorita: string;
+
   @Column({ name: 'eh_npc', type: 'boolean', default: false })
   ehNpc: boolean;
 
