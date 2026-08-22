@@ -12,6 +12,8 @@ import type { AbelhaRepository } from './repositorios/abelha.repository';
 import { AbelhaEntity } from './entidades/abelha.entity';
 import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './entidades/roupa-desbloqueada.entity';
+import { ProgressoDesbloqueadoEntity } from './entidades/progresso-desbloqueado.entity';
+import { TipoProgressoDesbloqueado } from './entidades/tipo-progresso-desbloqueado.enum';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from '../jogador/entidades/jogador.entity';
 import { UsuarioEntity } from '../usuario/entidades/usuario.entity';
@@ -27,6 +29,9 @@ export class AbelhaService {
 
     @InjectRepository(RoupaAbelhaEntity)
     private readonly roupaAbelhaRepo: Repository<RoupaAbelhaEntity>,
+
+    @InjectRepository(ProgressoDesbloqueadoEntity)
+    private readonly progressoDesbloqueadoRepo: Repository<ProgressoDesbloqueadoEntity>,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -294,5 +299,74 @@ export class AbelhaService {
   public async listarRoupaVestida(emailUsuario: string, idAbelha: string) {
     const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
     return abelha.roupa ?? null;
+  }
+
+  // ── Progresso desbloqueado (áreas, fases, aeroportos, ônibus) ──
+
+  private async listarProgresso(
+    emailUsuario: string,
+    idAbelha: string,
+    tipo: TipoProgressoDesbloqueado,
+  ): Promise<ProgressoDesbloqueadoEntity[]> {
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    return this.progressoDesbloqueadoRepo.find({
+      where: { abelha: { id: idAbelha }, tipo },
+      order: { desbloqueadoEm: 'ASC' },
+    });
+  }
+
+  /** Idempotente: se a abelha já tinha esse item desbloqueado, retorna o registro existente em vez de duplicar. */
+  private async desbloquearProgresso(
+    emailUsuario: string,
+    idAbelha: string,
+    tipo: TipoProgressoDesbloqueado,
+    identificador: string,
+  ): Promise<ProgressoDesbloqueadoEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    const existente = await this.progressoDesbloqueadoRepo.findOne({
+      where: { abelha: { id: idAbelha }, tipo, identificador },
+    });
+    if (existente) return existente;
+
+    const novoProgresso = new ProgressoDesbloqueadoEntity();
+    novoProgresso.abelha = abelha;
+    novoProgresso.tipo = tipo;
+    novoProgresso.identificador = identificador;
+
+    return this.progressoDesbloqueadoRepo.save(novoProgresso);
+  }
+
+  public listarAreasDesbloqueadas(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AREA);
+  }
+
+  public desbloquearArea(emailUsuario: string, idAbelha: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AREA, idMapa);
+  }
+
+  public listarFasesConcluidas(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.FASE);
+  }
+
+  public marcarFaseConcluida(emailUsuario: string, idAbelha: string, idFase: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.FASE, idFase);
+  }
+
+  public listarAeroportosDesbloqueados(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AEROPORTO);
+  }
+
+  public desbloquearAeroporto(emailUsuario: string, idAbelha: string, idAeroporto: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.AEROPORTO, idAeroporto);
+  }
+
+  public listarPassagensOnibusDesbloqueadas(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS);
+  }
+
+  public desbloquearPassagemOnibus(emailUsuario: string, idAbelha: string, idPontoOnibus: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.ONIBUS, idPontoOnibus);
   }
 }

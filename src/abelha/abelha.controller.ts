@@ -15,6 +15,10 @@ import { ResponseFactory, ControllerResponse } from '../utils/response';
 import { AdicionarDinheiroDto } from './dtos/adicionar-dinheiro.dto';
 import { AlterarMapaDto } from './dtos/alterar-mapa.dto';
 import { AdicionarRoupaDesbloqueadaDto } from './dtos/adicionar-roupa-desbloqueada.dto';
+import { DesbloquearAreaDto } from './dtos/desbloquear-area.dto';
+import { MarcarFaseConcluidaDto } from './dtos/marcar-fase-concluida.dto';
+import { DesbloquearAeroportoDto } from './dtos/desbloquear-aeroporto.dto';
+import { DesbloquearPassagemOnibusDto } from './dtos/desbloquear-passagem-onibus.dto';
 
 @Controller('/abelha')
 export class AbelhaController {
@@ -216,6 +220,149 @@ export class AbelhaController {
     return this.responseFactory.createSuccessResponse(
       roupa,
       'Roupa vestida obtida com sucesso',
+    );
+  }
+
+  // ── Progresso desbloqueado (áreas, fases, aeroportos, ônibus) ──
+
+  @Get('/:idAbelha/areas-desbloqueadas')
+  public async listarAreasDesbloqueadas(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const areas = await this._abelhaService.listarAreasDesbloqueadas(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      areas,
+      'Áreas desbloqueadas listadas com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/areas-desbloqueadas')
+  @HttpCode(HttpStatus.CREATED)
+  public async desbloquearArea(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: DesbloquearAreaDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const area = await this._abelhaService.desbloquearArea(
+      emailUsuario,
+      idAbelha,
+      body.idMapa,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      area,
+      'Área desbloqueada com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/fases-concluidas')
+  public async listarFasesConcluidas(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const fases = await this._abelhaService.listarFasesConcluidas(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      fases,
+      'Fases concluídas listadas com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/fases-concluidas')
+  @HttpCode(HttpStatus.CREATED)
+  public async marcarFaseConcluida(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: MarcarFaseConcluidaDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const fase = await this._abelhaService.marcarFaseConcluida(
+      emailUsuario,
+      idAbelha,
+      body.idFase,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      fase,
+      'Fase marcada como concluída com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/aeroportos-desbloqueados')
+  public async listarAeroportosDesbloqueados(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const aeroportos = await this._abelhaService.listarAeroportosDesbloqueados(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      aeroportos,
+      'Aeroportos desbloqueados listados com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/aeroportos-desbloqueados')
+  @HttpCode(HttpStatus.CREATED)
+  public async desbloquearAeroporto(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: DesbloquearAeroportoDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const aeroporto = await this._abelhaService.desbloquearAeroporto(
+      emailUsuario,
+      idAbelha,
+      body.idAeroporto,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      aeroporto,
+      'Aeroporto desbloqueado com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/passagens-onibus-desbloqueadas')
+  public async listarPassagensOnibusDesbloqueadas(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const passagens =
+      await this._abelhaService.listarPassagensOnibusDesbloqueadas(
+        emailUsuario,
+        idAbelha,
+      );
+
+    return this.responseFactory.createSuccessResponse(
+      passagens,
+      'Passagens de ônibus desbloqueadas listadas com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/passagens-onibus-desbloqueadas')
+  @HttpCode(HttpStatus.CREATED)
+  public async desbloquearPassagemOnibus(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: DesbloquearPassagemOnibusDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const passagem = await this._abelhaService.desbloquearPassagemOnibus(
+      emailUsuario,
+      idAbelha,
+      body.idPontoOnibus,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      passagem,
+      'Passagem de ônibus desbloqueada com sucesso',
     );
   }
 }
