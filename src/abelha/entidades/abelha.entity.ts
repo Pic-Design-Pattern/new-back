@@ -43,6 +43,10 @@ export class AbelhaEntity {
   @Column({ name: 'ticket_regional', type: 'bigint', default: 1 })
   ticketRegional: number;
 
+  /** Ids das aparências (itens de loja) equipadas agora — um por slot/tipo, sem precisar duplicar o tipo aqui. */
+  @Column({ name: 'aparencias_equipadas', type: 'jsonb', default: () => "'[]'" })
+  aparenciasEquipadas: string[];
+
   @OneToOne(() => RoupaAbelhaEntity, {
     eager: true,
     nullable: true,

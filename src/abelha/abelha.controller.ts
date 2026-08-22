@@ -20,6 +20,7 @@ import { MarcarFaseConcluidaDto } from './dtos/marcar-fase-concluida.dto';
 import { DesbloquearAeroportoDto } from './dtos/desbloquear-aeroporto.dto';
 import { DesbloquearPassagemOnibusDto } from './dtos/desbloquear-passagem-onibus.dto';
 import { DesbloquearAparenciaDto } from './dtos/desbloquear-aparencia.dto';
+import { AtualizarEquipamentoDto } from './dtos/atualizar-equipamento.dto';
 
 @Controller('/abelha')
 export class AbelhaController {
@@ -130,6 +131,26 @@ export class AbelhaController {
     return this.responseFactory.createSuccessResponse(
       abelha,
       'Passaporte regional gasto com sucesso',
+    );
+  }
+
+  @Patch('/:idAbelha/equipamento')
+  @HttpCode(HttpStatus.OK)
+  public async atualizarEquipamento(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: AtualizarEquipamentoDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const abelha = await this._abelhaService.atualizarEquipamento(
+      emailUsuario,
+      idAbelha,
+      body.tamanho,
+      body.aparenciasEquipadas,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      abelha,
+      'Equipamento atualizado com sucesso',
     );
   }
 

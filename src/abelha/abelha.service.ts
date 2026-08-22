@@ -62,9 +62,10 @@ export class AbelhaService {
     novaAbelha.comidaFavorita = dados.comidaFavorita;
     novaAbelha.ehNpc = false;
     novaAbelha.mapaAtual = 'inicial';
-    novaAbelha.dinheiro = 500.0;
+    novaAbelha.dinheiro = 0.0;
     novaAbelha.ticketContinental = 1;
     novaAbelha.ticketRegional = 1;
+    novaAbelha.aparenciasEquipadas = [];
     if (roupa) novaAbelha.roupa = roupa as RoupaAbelhaEntity;
 
     return novaAbelha;
@@ -127,7 +128,24 @@ export class AbelhaService {
       dinheiro: abelha.dinheiro,
       ticketContinental: abelha.ticketContinental,
       ticketRegional: abelha.ticketRegional,
+      tamanho: abelha.tamanho,
+      aparenciasEquipadas: abelha.aparenciasEquipadas ?? [],
     };
+  }
+
+  /** Atualiza o que a abelha está usando agora (tamanho do corpo + aparências equipadas por slot). */
+  public async atualizarEquipamento(
+    emailUsuario: string,
+    idAbelha: string,
+    tamanho: string | undefined,
+    aparenciasEquipadas: string[],
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    if (tamanho !== undefined) abelha.tamanho = tamanho;
+    abelha.aparenciasEquipadas = aparenciasEquipadas;
+
+    return this.abelhaRepositorio.salvar(abelha);
   }
 
   /** `valor` positivo credita, negativo debita — rejeita se o saldo ficaria negativo. */
