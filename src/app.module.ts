@@ -9,6 +9,12 @@ import { UsuarioModule } from './usuario/usuario.module';
 import { JogadorModule } from './jogador/jogador.module';
 import { AbelhaModule } from './abelha/abelha.module';
 import { ResponseModule } from './utils/response.module';
+import { AbelhaEntity } from './abelha/entidades/abelha.entity';
+import { ProgressoDesbloqueadoEntity } from './abelha/entidades/progresso-desbloqueado.entity';
+import { RoupaAbelhaEntity } from './abelha/entidades/roupa-abelha.entity';
+import { RoupaDesbloqueadaEntity } from './abelha/entidades/roupa-desbloqueada.entity';
+import { JogadorEntity } from './jogador/entidades/jogador.entity';
+import { UsuarioEntity } from './usuario/entidades/usuario.entity';
 
 @Module({
   imports: [
@@ -30,13 +36,20 @@ import { ResponseModule } from './utils/response.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 5432),
-        username: configService.get<string>('DB_USERNAME', 'postgres'),
-        password: configService.get<string>('DB_PASSWORD', 'postgres'),
-        database: configService.get<string>('DB_DATABASE', 'pic'),
-        autoLoadEntities: true,
+        host: configService.getOrThrow<string>('DB_HOST', 'localhost'),
+        port: configService.getOrThrow<number>('DB_PORT', 5432),
+        username: configService.getOrThrow<string>('DB_USERNAME', 'postgres'),
+        password: configService.getOrThrow<string>('DB_PASSWORD', 'postgres'),
+        database: configService.getOrThrow<string>('DB_DATABASE', 'pic'),
         synchronize: false,
+        entities: [
+          AbelhaEntity,
+          RoupaAbelhaEntity,
+          RoupaDesbloqueadaEntity,
+          ProgressoDesbloqueadoEntity,
+          JogadorEntity,
+          UsuarioEntity
+        ],
       }),
     }),
     AutenticadoModule,
