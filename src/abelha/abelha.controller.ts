@@ -21,6 +21,9 @@ import { DesbloquearAeroportoDto } from './dtos/desbloquear-aeroporto.dto';
 import { DesbloquearPassagemOnibusDto } from './dtos/desbloquear-passagem-onibus.dto';
 import { DesbloquearAparenciaDto } from './dtos/desbloquear-aparencia.dto';
 import { AtualizarEquipamentoDto } from './dtos/atualizar-equipamento.dto';
+import { MarcarDialogoConcluidoDto } from './dtos/marcar-dialogo-concluido.dto';
+import { RegistrarTentativaFaseDto } from './dtos/registrar-tentativa-fase.dto';
+import { MarcarConquistaDesbloqueadaDto } from './dtos/marcar-conquista-desbloqueada.dto';
 
 @Controller('/abelha')
 export class AbelhaController {
@@ -131,6 +134,40 @@ export class AbelhaController {
     return this.responseFactory.createSuccessResponse(
       abelha,
       'Passaporte regional gasto com sucesso',
+    );
+  }
+
+  @Patch('/:idAbelha/sequencia-sem-errar')
+  @HttpCode(HttpStatus.OK)
+  public async incrementarSequenciaSemErrar(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const abelha = await this._abelhaService.incrementarSequenciaSemErrar(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      abelha,
+      'Sequência sem errar incrementada com sucesso',
+    );
+  }
+
+  @Delete('/:idAbelha/sequencia-sem-errar')
+  @HttpCode(HttpStatus.OK)
+  public async resetarSequenciaSemErrar(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const abelha = await this._abelhaService.resetarSequenciaSemErrar(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      abelha,
+      'Sequência sem errar reiniciada com sucesso',
     );
   }
 
@@ -424,6 +461,130 @@ export class AbelhaController {
     return this.responseFactory.createCreatedResponse(
       aparencia,
       'Aparência desbloqueada com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/dialogos-concluidos')
+  public async listarDialogosConcluidos(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const dialogos = await this._abelhaService.listarDialogosConcluidos(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      dialogos,
+      'Diálogos concluídos listados com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/dialogos-concluidos')
+  @HttpCode(HttpStatus.CREATED)
+  public async marcarDialogoConcluido(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: MarcarDialogoConcluidoDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const dialogo = await this._abelhaService.marcarDialogoConcluido(
+      emailUsuario,
+      idAbelha,
+      body.idDialogo,
+      body.idMapa,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      dialogo,
+      'Diálogo marcado como concluído com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/conquistas-desbloqueadas')
+  public async listarConquistasDesbloqueadas(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const conquistas = await this._abelhaService.listarConquistasDesbloqueadas(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      conquistas,
+      'Conquistas desbloqueadas listadas com sucesso',
+    );
+  }
+
+  @Post('/:idAbelha/conquistas-desbloqueadas')
+  @HttpCode(HttpStatus.CREATED)
+  public async marcarConquistaDesbloqueada(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: MarcarConquistaDesbloqueadaDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const conquista = await this._abelhaService.marcarConquistaDesbloqueada(
+      emailUsuario,
+      idAbelha,
+      body.idConquista,
+      body.idMapa,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      conquista,
+      'Conquista desbloqueada com sucesso',
+    );
+  }
+
+  // ── Tentativas por fase (histórico + telemetria) ──
+
+  @Post('/:idAbelha/tentativas-fase')
+  @HttpCode(HttpStatus.CREATED)
+  public async registrarTentativaFase(
+    @Param('idAbelha') idAbelha: string,
+    @Body() body: RegistrarTentativaFaseDto,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const tentativa = await this._abelhaService.registrarTentativaFase(
+      emailUsuario,
+      idAbelha,
+      body.idFase,
+      body.idMapa,
+      body.tentativas,
+      body.erros,
+    );
+
+    return this.responseFactory.createCreatedResponse(
+      tentativa,
+      'Tentativa de fase registrada com sucesso',
+    );
+  }
+
+  @Get('/:idAbelha/tentativas-fase')
+  public async listarTentativasDaAbelha(
+    @Param('idAbelha') idAbelha: string,
+    @UsuarioLogado('email') emailUsuario: string,
+  ): Promise<ControllerResponse> {
+    const tentativas = await this._abelhaService.listarTentativasDaAbelha(
+      emailUsuario,
+      idAbelha,
+    );
+
+    return this.responseFactory.createSuccessResponse(
+      tentativas,
+      'Tentativas da abelha listadas com sucesso',
+    );
+  }
+
+  @Get('/fases/:idFase/estatisticas')
+  public async buscarEstatisticasDaFase(
+    @Param('idFase') idFase: string,
+  ): Promise<ControllerResponse> {
+    const estatisticas = await this._abelhaService.buscarEstatisticasDaFase(idFase);
+
+    return this.responseFactory.createSuccessResponse(
+      estatisticas,
+      'Estatísticas da fase obtidas com sucesso',
     );
   }
 

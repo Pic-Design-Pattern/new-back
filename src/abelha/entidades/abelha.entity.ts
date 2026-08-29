@@ -43,6 +43,10 @@ export class AbelhaEntity {
   @Column({ name: 'ticket_regional', type: 'bigint', default: 1 })
   ticketRegional: number;
 
+  /** Fases seguidas concluídas sem nenhuma resposta errada — zera ao errar qualquer coisa. */
+  @Column({ name: 'sequencia_sem_errar', type: 'int', default: 0 })
+  sequenciaSemErrar: number;
+
   /** Ids das aparências (itens de loja) equipadas agora — um por slot/tipo, sem precisar duplicar o tipo aqui. */
   @Column({ name: 'aparencias_equipadas', type: 'jsonb', default: () => "'[]'" })
   aparenciasEquipadas: string[];

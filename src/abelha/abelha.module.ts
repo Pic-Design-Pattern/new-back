@@ -4,6 +4,7 @@ import { AbelhaEntity } from './entidades/abelha.entity';
 import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './entidades/roupa-desbloqueada.entity';
 import { ProgressoDesbloqueadoEntity } from './entidades/progresso-desbloqueado.entity';
+import { TentativaFaseEntity } from './entidades/tentativa-fase.entity';
 import { AbelhaService } from './abelha.service';
 import { AbelhaController } from './abelha.controller';
 import { AbelhaRepositoryProvider } from './providers/abelha-repository.provider';
@@ -17,6 +18,7 @@ import { ResponseModule } from '../utils/response.module';
       RoupaAbelhaEntity,
       RoupaDesbloqueadaEntity,
       ProgressoDesbloqueadoEntity,
+      TentativaFaseEntity,
     ]),
     ResponseModule,
   ],

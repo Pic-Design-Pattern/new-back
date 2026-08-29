@@ -14,6 +14,7 @@ import { RoupaAbelhaEntity } from './entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './entidades/roupa-desbloqueada.entity';
 import { ProgressoDesbloqueadoEntity } from './entidades/progresso-desbloqueado.entity';
 import { TipoProgressoDesbloqueado } from './entidades/tipo-progresso-desbloqueado.enum';
+import { TentativaFaseEntity } from './entidades/tentativa-fase.entity';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from '../jogador/entidades/jogador.entity';
 import { UsuarioEntity } from '../usuario/entidades/usuario.entity';
@@ -32,6 +33,9 @@ export class AbelhaService {
 
     @InjectRepository(ProgressoDesbloqueadoEntity)
     private readonly progressoDesbloqueadoRepo: Repository<ProgressoDesbloqueadoEntity>,
+
+    @InjectRepository(TentativaFaseEntity)
+    private readonly tentativaFaseRepo: Repository<TentativaFaseEntity>,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -128,9 +132,30 @@ export class AbelhaService {
       dinheiro: abelha.dinheiro,
       ticketContinental: abelha.ticketContinental,
       ticketRegional: abelha.ticketRegional,
+      sequenciaSemErrar: abelha.sequenciaSemErrar,
       tamanho: abelha.tamanho,
       aparenciasEquipadas: abelha.aparenciasEquipadas ?? [],
     };
+  }
+
+  public async incrementarSequenciaSemErrar(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    abelha.sequenciaSemErrar = Number(abelha.sequenciaSemErrar) + 1;
+    return this.abelhaRepositorio.salvar(abelha);
+  }
+
+  public async resetarSequenciaSemErrar(
+    emailUsuario: string,
+    idAbelha: string,
+  ): Promise<AbelhaEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    abelha.sequenciaSemErrar = 0;
+    return this.abelhaRepositorio.salvar(abelha);
   }
 
   /** Atualiza o que a abelha está usando agora (tamanho do corpo + aparências equipadas por slot). */
@@ -398,6 +423,88 @@ export class AbelhaService {
 
   public desbloquearAparencia(emailUsuario: string, idAbelha: string, idAparencia: string, idMapa: string) {
     return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.APARENCIA, idAparencia, idMapa);
+  }
+
+  /** Diálogos já exibidos — pra não repetir o mesmo diálogo (ex.: boas-vindas) a cada login. */
+  public listarDialogosConcluidos(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.DIALOGO);
+  }
+
+  public marcarDialogoConcluido(emailUsuario: string, idAbelha: string, idDialogo: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.DIALOGO, idDialogo, idMapa);
+  }
+
+  /** Conquistas desbloqueadas — persistidas pra sobreviver a reload/login, em vez de reavaliadas só em memória. */
+  public listarConquistasDesbloqueadas(emailUsuario: string, idAbelha: string) {
+    return this.listarProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.CONQUISTA);
+  }
+
+  public marcarConquistaDesbloqueada(emailUsuario: string, idAbelha: string, idConquista: string, idMapa: string) {
+    return this.desbloquearProgresso(emailUsuario, idAbelha, TipoProgressoDesbloqueado.CONQUISTA, idConquista, idMapa);
+  }
+
+  // ── Tentativas por fase (histórico + telemetria) ──
+
+  /**
+   * Registra um resumo de tentativas ao concluir (ou desistir de) uma fase. Idempotente por
+   * (abelha, fase): se já existe um registro, SOMA nos totais existentes em vez de criar uma
+   * linha nova — reabrir a mesma fase depois acumula no mesmo histórico, não duplica.
+   */
+  public async registrarTentativaFase(
+    emailUsuario: string,
+    idAbelha: string,
+    idFase: string,
+    idMapa: string,
+    tentativas: number,
+    erros: number,
+  ): Promise<TentativaFaseEntity> {
+    const abelha = await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    const existente = await this.tentativaFaseRepo.findOne({
+      where: { abelha: { id: idAbelha }, idFase },
+    });
+
+    if (existente) {
+      existente.tentativas += tentativas;
+      existente.erros += erros;
+      existente.idMapa = idMapa;
+      return this.tentativaFaseRepo.save(existente);
+    }
+
+    const registro = new TentativaFaseEntity();
+    registro.abelha = abelha;
+    registro.idFase = idFase;
+    registro.idMapa = idMapa;
+    registro.tentativas = tentativas;
+    registro.erros = erros;
+
+    return this.tentativaFaseRepo.save(registro);
+  }
+
+  /** Histórico pessoal de tentativas da abelha, uma linha por fase já jogada. */
+  public async listarTentativasDaAbelha(emailUsuario: string, idAbelha: string) {
+    await this.validarPosseAbelha(emailUsuario, idAbelha);
+
+    return this.tentativaFaseRepo.find({
+      where: { abelha: { id: idAbelha } },
+      order: { atualizadaEm: 'DESC' },
+    });
+  }
+
+  /** Telemetria agregada de uma fase específica, entre TODAS as abelhas — não escopado a uma abelha. */
+  public async buscarEstatisticasDaFase(idFase: string) {
+    const registros = await this.tentativaFaseRepo.find({ where: { idFase } });
+
+    const totalJogadas = registros.length;
+    const totalTentativas = registros.reduce((soma, r) => soma + r.tentativas, 0);
+    const totalErros = registros.reduce((soma, r) => soma + r.erros, 0);
+
+    return {
+      idFase,
+      totalJogadas,
+      mediaTentativas: totalJogadas ? totalTentativas / totalJogadas : 0,
+      mediaErros: totalJogadas ? totalErros / totalJogadas : 0,
+    };
   }
 
   /** Todo progresso (área, fases, aeroportos, ônibus) desbloqueado num mapa específico, numa única busca — usado ao abrir um mapa. */
