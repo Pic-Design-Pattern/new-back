@@ -13,6 +13,7 @@ import { AbelhaEntity } from './abelha/entidades/abelha.entity';
 import { ProgressoDesbloqueadoEntity } from './abelha/entidades/progresso-desbloqueado.entity';
 import { RoupaAbelhaEntity } from './abelha/entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './abelha/entidades/roupa-desbloqueada.entity';
+import { TentativaFaseEntity } from './abelha/entidades/tentativa-fase.entity';
 import { JogadorEntity } from './jogador/entidades/jogador.entity';
 import { UsuarioEntity } from './usuario/entidades/usuario.entity';
 
@@ -47,6 +48,7 @@ import { UsuarioEntity } from './usuario/entidades/usuario.entity';
           RoupaAbelhaEntity,
           RoupaDesbloqueadaEntity,
           ProgressoDesbloqueadoEntity,
+          TentativaFaseEntity,
           JogadorEntity,
           UsuarioEntity
         ],
