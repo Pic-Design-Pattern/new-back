@@ -11,8 +11,7 @@ const origensPermitidas = origensString
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  //Configurações do CORS
+  
   app.enableCors({
     origin: origensPermitidas,
     methods: 'GET,PUT,POST,DELETE,HEAD,PATCH',
