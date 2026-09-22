@@ -5,24 +5,16 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
 import { IS_PUBLICO_KEY } from '../../decorators/publico.decorator';
+import { auth } from '../../../../auth/auth';
+import { fromNodeHeaders } from 'better-auth/node';
 
 @Injectable()
 export class AutenticadoGuard implements CanActivate {
   private readonly logger = new Logger(AutenticadoGuard.name);
-  private readonly secretJwt: string;
 
-  constructor(
-    private jwtService: JwtService,
-    private reflector: Reflector,
-    private readonly configService: ConfigService,
-  ) {
-    this.secretJwt = this.configService.getOrThrow('JWT_SECRET');
-  }
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublico = this.reflector.getAllAndOverride<boolean>(
@@ -35,32 +27,22 @@ export class AutenticadoGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const token = this.extrairTokenDoHeader(request);
-
-    if (!token) {
-      throw new UnauthorizedException('Token não encontrado');
-    }
-
+    
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.secretJwt,
+      const session = await auth.api.getSession({
+        headers: fromNodeHeaders(request.headers),
       });
 
-      const now = Math.floor(Date.now() / 1000);
-      if (payload.exp && payload.exp < now) {
-        throw new UnauthorizedException('Token expirado');
+      if (!session || !session.user) {
+        throw new UnauthorizedException('Sessão inválida ou expirada');
       }
 
-      request['usuario'] = payload;
+      // Repassando os dados do usuário para a request
+      request['usuario'] = session.user;
       return true;
     } catch (error) {
       this.logger.error(error);
-      throw new UnauthorizedException('Token inválido ou expirado');
+      throw new UnauthorizedException('Sessão inválida ou expirada');
     }
-  }
-
-  private extrairTokenDoHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
   }
 }
