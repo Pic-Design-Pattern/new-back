@@ -11,9 +11,9 @@ import { AbelhaService } from '../abelha/abelha.service';
 import { CadastrarJogadorDto } from './dtos/cadastrar-jogador.dto';
 import { CadastrarAbelhaInlineDto } from './dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from './entidades/jogador.entity';
-import { UsuarioRepositoryToken } from 'src/usuario/repositorios/usuario.repository';
-import type { UsuarioRepository } from 'src/usuario/repositorios/usuario.repository';
-import { AbelhaEntity } from 'src/abelha/entidades/abelha.entity';
+import { UsuarioRepositoryToken } from '../usuario/repositorios/usuario.repository';
+import type { UsuarioRepository } from '../usuario/repositorios/usuario.repository';
+import { AbelhaEntity } from '../abelha/entidades/abelha.entity';
 
 @Injectable()
 export class JogadorService {
