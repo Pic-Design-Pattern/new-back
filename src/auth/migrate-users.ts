@@ -13,8 +13,6 @@ async function bootstrap() {
   try {
     const usuarios = await queryRunner.query('SELECT * FROM usuarios');
 
-    console.log(`Foram encontrados ${usuarios.length} usuários para migrar.`);
-
     for (const usuario of usuarios) {
       const existe = await queryRunner.query(
         'SELECT id FROM "user" WHERE email = $1',
@@ -45,7 +43,6 @@ async function bootstrap() {
     }
 
     await queryRunner.commitTransaction();
-    console.log('Migração concluída com sucesso!');
   } catch (error) {
     console.error('Erro na migração. Fazendo rollback...', error);
     await queryRunner.rollbackTransaction();
