@@ -23,28 +23,31 @@ const mockAbelha: AbelhaEntity = {
   roupa: undefined,
   roupasDesbloqueadas: [],
   jogador: {} as any,
+  comidaFavorita: 'mel',
+  sequenciaSemErrar: 0,
+  aparenciasEquipadas: [],
 };
 
 const mockJogador: JogadorEntity = {
   id: 'jogador-uuid-1',
   nome: 'João',
   nivel: 1,
-  comidaFavorita: 'mel',
   abelhas: [mockAbelha],
 };
 
 const mockCadastrarJogadorDto: CadastrarJogadorDto = {
   nome: 'João',
-  comidaFavorita: 'mel',
   abelha: {
     nome: 'Belinha',
     tamanho: 'medio',
+    comidaFavorita: 'mel',
   } as CadastrarAbelhaInlineDto,
 };
 
 const mockCadastrarAbelhaDto: CadastrarAbelhaInlineDto = {
   nome: 'Mel',
   tamanho: 'grande',
+  comidaFavorita: 'mel',
 };
 
 // ── Mock do Service ──

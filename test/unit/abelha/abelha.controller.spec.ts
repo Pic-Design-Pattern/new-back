@@ -32,6 +32,9 @@ const mockAbelha: AbelhaEntity = {
   roupa: mockRoupaAbelha,
   roupasDesbloqueadas: [],
   jogador: {} as any,
+  comidaFavorita: 'mel',
+  sequenciaSemErrar: 0,
+  aparenciasEquipadas: [],
 };
 
 const mockRoupaDesbloqueada: RoupaDesbloqueadaEntity = {
