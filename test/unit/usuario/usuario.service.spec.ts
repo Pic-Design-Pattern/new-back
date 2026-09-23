@@ -31,11 +31,11 @@ describe('UsuarioService', () => {
   });
 
   describe('obterPerfil', () => {
-    it('deve retornar o usuário sem a senha caso encontrado', async () => {
+    it('deve retornar o usuário caso encontrado', async () => {
       const mockUsuario = {
         id: 'user-id',
         email: 'test@email.com',
-        senha: 'senha123',
+        name: 'Test',
         papel: 'JOGADOR',
       };
 
@@ -44,10 +44,10 @@ describe('UsuarioService', () => {
       const resultado = await service.obterPerfil('test@email.com');
 
       expect(mockUsuarioRepository.buscarPorEmail).toHaveBeenCalledWith('test@email.com');
-      expect(resultado).not.toHaveProperty('senha');
       expect(resultado).toEqual({
         id: 'user-id',
         email: 'test@email.com',
+        name: 'Test',
         papel: 'JOGADOR',
       });
     });

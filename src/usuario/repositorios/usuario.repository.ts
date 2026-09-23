@@ -1,11 +1,11 @@
-import { UsuarioEntity } from '../entidades/usuario.entity';
+import { UserEntity } from '../../auth/entidades/user.entity';
 
 export const UsuarioRepositoryToken = Symbol('USUARIO_REPOSITORY');
 
 export interface UsuarioRepository {
-  buscarPorEmail(email: string): Promise<UsuarioEntity | null>;
-  buscarPorNomeDeUsuario(nomeDeUsuario: string): Promise<UsuarioEntity | null>;
+  buscarPorEmail(email: string): Promise<UserEntity | null>;
+  buscarPorNomeDeUsuario(nomeDeUsuario: string): Promise<UserEntity | null>;
   existePorEmail(email: string): Promise<boolean>;
-  salvar(usuario: UsuarioEntity): Promise<UsuarioEntity>;
+  salvar(usuario: UserEntity): Promise<UserEntity>;
   vincularJogador(usuarioId: string, jogadorId: string): Promise<void>;
 }

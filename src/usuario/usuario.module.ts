@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsuarioEntity } from './entidades/usuario.entity';
+import { UserEntity } from '../auth/entidades/user.entity';
 import { UsuarioService } from './usuario.service';
 import { UsuarioController } from './usuario.controller';
 import { UsuarioRepositoryProvider } from './providers/usuario-repository.provider';
@@ -9,7 +9,7 @@ import { UsuarioRepositoryToken } from './repositorios/usuario.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UsuarioEntity]),
+    TypeOrmModule.forFeature([UserEntity]),
     AutenticadoModule,
   ],
   controllers: [UsuarioController],

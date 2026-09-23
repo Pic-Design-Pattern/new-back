@@ -5,8 +5,7 @@ import {
 } from '@nestjs/common';
 import { UsuarioRepositoryToken } from './repositorios/usuario.repository';
 import type { UsuarioRepository } from './repositorios/usuario.repository';
-import { UsuarioEntity } from './entidades/usuario.entity';
-import { PapelUsuario } from '../common/enums/papel-usuario.enum';
+import { UserEntity } from '../auth/entidades/user.entity';
 
 /**
  * Service responsável pelas operações de negócio do Usuário.
@@ -17,14 +16,13 @@ export class UsuarioService {
     @Inject(UsuarioRepositoryToken)
     private readonly usuarioRepositorio: UsuarioRepository,
   ) {}
-  public async obterPerfil(email: string): Promise<Omit<UsuarioEntity, 'senha'>> {
+  public async obterPerfil(email: string): Promise<UserEntity> {
     const usuario = await this.usuarioRepositorio.buscarPorEmail(email);
 
     if (!usuario) {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    const { senha: _, ...usuarioSemSenha } = usuario;
-    return usuarioSemSenha;
+    return usuario;
   }
 }

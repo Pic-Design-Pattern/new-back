@@ -17,7 +17,7 @@ import { TipoProgressoDesbloqueado } from './entidades/tipo-progresso-desbloquea
 import { TentativaFaseEntity } from './entidades/tentativa-fase.entity';
 import { CadastrarAbelhaInlineDto } from '../jogador/dtos/cadastrar-abelha-inline.dto';
 import { JogadorEntity } from '../jogador/entidades/jogador.entity';
-import { UsuarioEntity } from '../usuario/entidades/usuario.entity';
+import { UserEntity } from '../auth/entidades/user.entity';
 
 @Injectable()
 export class AbelhaService {
@@ -40,12 +40,6 @@ export class AbelhaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  /**
-   * Monta a entidade em memória, sem salvar. Usado quando quem chama ainda vai
-   * persistir a abelha junto de outra entidade (ex.: cascade ao salvar o Jogador
-   * na primeira criação — salvar a abelha isoladamente antes falha porque o
-   * jogador ainda não tem id pra servir de FK).
-   */
   public construirAbelha(dados: CadastrarAbelhaInlineDto): AbelhaEntity {
     let roupa: Partial<RoupaAbelhaEntity> | null = null;
 
@@ -99,7 +93,7 @@ export class AbelhaService {
       throw new NotFoundException('Abelha não encontrada');
     }
 
-    const usuario = await this.dataSource.getRepository(UsuarioEntity).findOne({
+    const usuario = await this.dataSource.getRepository(UserEntity).findOne({
       where: { email: emailUsuario },
       relations: { jogador: { abelhas: true } },
     });

@@ -15,7 +15,6 @@ import { RoupaAbelhaEntity } from './abelha/entidades/roupa-abelha.entity';
 import { RoupaDesbloqueadaEntity } from './abelha/entidades/roupa-desbloqueada.entity';
 import { TentativaFaseEntity } from './abelha/entidades/tentativa-fase.entity';
 import { JogadorEntity } from './jogador/entidades/jogador.entity';
-import { UsuarioEntity } from './usuario/entidades/usuario.entity';
 import { AuthModule } from './auth/auth.module';
 import { UserEntity } from './auth/entidades/user.entity';
 import { SessionEntity } from './auth/entidades/session.entity';
@@ -55,7 +54,6 @@ import { VerificationEntity } from './auth/entidades/verification.entity';
           ProgressoDesbloqueadoEntity,
           TentativaFaseEntity,
           JogadorEntity,
-          UsuarioEntity,
           UserEntity,
           SessionEntity,
           AccountEntity,

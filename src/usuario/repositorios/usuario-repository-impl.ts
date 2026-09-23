@@ -1,18 +1,18 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { UsuarioEntity } from '../entidades/usuario.entity';
+import { UserEntity } from '../../auth/entidades/user.entity';
 import { UsuarioRepository } from './usuario.repository';
 
 @Injectable()
 export class UsuarioRepositoryImplementation implements UsuarioRepository {
   private readonly logger = new Logger(UsuarioRepositoryImplementation.name);
-  private readonly _usuarioRepository: Repository<UsuarioEntity>;
+  private readonly _usuarioRepository: Repository<UserEntity>;
 
   constructor(private readonly _typeORMDataSource: DataSource) {
-    this._usuarioRepository = _typeORMDataSource.getRepository(UsuarioEntity);
+    this._usuarioRepository = _typeORMDataSource.getRepository(UserEntity);
   }
 
-  public async buscarPorEmail(email: string): Promise<UsuarioEntity | null> {
+  public async buscarPorEmail(email: string): Promise<UserEntity | null> {
     return this._usuarioRepository.findOne({
       where: { email },
       relations: {
@@ -28,8 +28,8 @@ export class UsuarioRepositoryImplementation implements UsuarioRepository {
     });
   }
 
-  public async buscarPorNomeDeUsuario(nomeDeUsuario: string): Promise<UsuarioEntity | null> {
-    return this._usuarioRepository.findOne({ where: { nomeDeUsuario } }).catch((error) => {
+  public async buscarPorNomeDeUsuario(nomeDeUsuario: string): Promise<UserEntity | null> {
+    return this._usuarioRepository.findOne({ where: { name: nomeDeUsuario } }).catch((error) => {
       this.logger.error(error);
       throw new InternalServerErrorException('Erro ao buscar usuário por nome!');
     });
@@ -42,7 +42,7 @@ export class UsuarioRepositoryImplementation implements UsuarioRepository {
     });
   }
 
-  public async salvar(usuario: UsuarioEntity): Promise<UsuarioEntity> {
+  public async salvar(usuario: UserEntity): Promise<UserEntity> {
     return this._typeORMDataSource
       .transaction(async (manager) => {
         return manager.save(usuario);
@@ -56,7 +56,7 @@ export class UsuarioRepositoryImplementation implements UsuarioRepository {
   public async vincularJogador(usuarioId: string, jogadorId: string): Promise<void> {
     await this._typeORMDataSource
       .transaction(async (manager) => {
-        await manager.update(UsuarioEntity, usuarioId, {
+        await manager.update(UserEntity, usuarioId, {
           jogador: { id: jogadorId },
         } as any);
       })
