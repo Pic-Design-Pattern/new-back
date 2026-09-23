@@ -13,10 +13,16 @@ const pool = new Pool({
   database: process.env.DB_DATABASE || 'pic',
 });
 
+const origensString = process.env.CORS_ORIGIN || 'http://localhost:4200';
+const trustedOriginsList = origensString
+  .split(',')
+  .map((origin) => origin.trim());
+
 export const auth = betterAuth({
   database: pool,
-  baseURL: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  baseURL: process.env.BACKEND_URL || 'http://localhost:3000',
   basePath: '/api/autenticacao',
+  trustedOrigins: trustedOriginsList,
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,

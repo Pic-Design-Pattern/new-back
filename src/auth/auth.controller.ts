@@ -11,6 +11,7 @@ const handler = toNodeHandler(auth);
 export class AuthController {
   @All('/*')
   public async handleAuth(@Req() req: Request, @Res() res: Response) {
+    req.url = req.originalUrl;
     return handler(req, res);
   }
 }
