@@ -61,9 +61,8 @@ export const auth = betterAuth({
       updatedAt: 'updated_at',
     },
   },
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: true,
+  emailVerification: {
+    sendOnSignUp: true,
     sendVerificationEmail: async ({ user, url }) => {
       await resend.emails.send({
         from: 'no-reply@femabee.online',
@@ -72,6 +71,10 @@ export const auth = betterAuth({
         html: `<p>Olá ${user.name},</p><p>Clique no link abaixo para confirmar seu e-mail:</p><p><a href="${url}">${url}</a></p>`,
       });
     },
+  },
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       await resend.emails.send({
         from: 'no-reply@femabee.online',
